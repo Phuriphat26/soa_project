@@ -104,7 +104,7 @@ function AdvisorRequestList() {
                                     <>
                                         {/* ใช้ e.stopPropagation() เพื่อป้องกันไม่ให้ onClick ของ <tr> ถูกเรียก */}
                                         <button 
-                                            onClick={(e) => { e.stopPropagation(); handleUpdateStatus(req.id, 'Approved'); }}
+                                            onClick={(e) => { e.stopPropagation(); handleUpdateStatus(req.id, 'APPROVED'); }}
                                             style={{ 
                                                 padding: '5px 10px', 
                                                 background: 'darkgreen', 

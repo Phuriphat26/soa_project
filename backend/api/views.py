@@ -95,7 +95,7 @@ class RequestViewSet(viewsets.ModelViewSet):
         # ⭐️ เพิ่มเงื่อนไขนี้: ถ้า action คือ 'partial_update' (PATCH)
         if self.action == 'partial_update': 
             # (ตรวจสอบสิทธิ์คนอัปเดต)
-            if self.request.user.profile.role != 'STUDENT':
+            if self.request.user.profile.role != 'Student':
                 # ให้ใช้ Serializer ตัวใหม่ที่รับ 'status' ได้
                 return RequestStatusUpdateSerializer
             # (ถ้าเป็น Student พยายาม PATCH, จะโดน Permission Denied)
@@ -111,9 +111,9 @@ class RequestViewSet(viewsets.ModelViewSet):
         if not user.is_authenticated:
             return Request.objects.none()
             
-        if user.profile.role == 'STUDENT':
+        if user.profile.role == 'Student':
             return Request.objects.filter(student=user).order_by('-created_at')
-        elif user.profile.role != 'STUDENT':
+        elif user.profile.role != 'Student':
             return Request.objects.all().order_by('-created_at')
         
         return Request.objects.none()
