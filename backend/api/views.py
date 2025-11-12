@@ -15,12 +15,13 @@ from .serializers import (
     RequestTypeSerializer, RequestSerializer, RequestDetailSerializer, 
     NotificationSerializer, RequestHistorySerializer,
     AttachmentSerializer,
-    StudentRegisterSerializer, # <-- ตัวใหม่
-    StaffRegisterSerializer,   # <-- ตัวใหม่
-    RequestCreateSerializer  # <-- ตัวสำคัญที่เกือบลืม
+    StudentRegisterSerializer,
+    StaffRegisterSerializer,
+    RequestCreateSerializer,
+    RequestStatusUpdateSerializer  # ⭐️ 1. Import ตัวใหม่เข้ามา
 )
 
-from .permissions import IsStudent, IsStaff # Import "ยาม"
+from .permissions import IsStudent, IsStaff 
 
 # [ 1 ] Views สำหรับ User และ Authentication
 # ----------------------------------------
@@ -34,7 +35,7 @@ class StaffRegisterView(generics.CreateAPIView):
     permission_classes = [permissions.IsAdminUser] 
     serializer_class = StaffRegisterSerializer
 
-class UserView(generics.RetrieveAPIView):
+class UserView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserSerializer
     def get_object(self):
@@ -42,6 +43,7 @@ class UserView(generics.RetrieveAPIView):
 
 # [ 2 ] Views สำหรับข้อมูลหลัก
 # ----------------------------------------
+# ... (CategoryViewSet, RequestTypeViewSet, NotificationViewSet เหมือนเดิม) ...
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -75,34 +77,40 @@ class NotificationViewSet(viewsets.ModelViewSet):
         notification.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 # [ 3 ] ViewSet หลัก: Request
 # ----------------------------------------
 class RequestViewSet(viewsets.ModelViewSet):
     queryset = Request.objects.all()
     permission_classes = [permissions.IsAuthenticated] 
 
-    # --- (2) นี่คือ get_serializer_class ที่ถูกต้อง ---
+    # ⭐️ 2. แก้ไข get_serializer_class ⭐️
     def get_serializer_class(self):
         if self.action == 'create':
             return RequestCreateSerializer
+            
         if self.action == 'retrieve':
             return RequestDetailSerializer
-        return RequestSerializer # (Default)
+            
+        # ⭐️ เพิ่มเงื่อนไขนี้: ถ้า action คือ 'partial_update' (PATCH)
+        if self.action == 'partial_update': 
+            # (ตรวจสอบสิทธิ์คนอัปเดต)
+            if self.request.user.profile.role != 'STUDENT':
+                # ให้ใช้ Serializer ตัวใหม่ที่รับ 'status' ได้
+                return RequestStatusUpdateSerializer
+            # (ถ้าเป็น Student พยายาม PATCH, จะโดน Permission Denied)
+        
+        # (Default) ถ้าเป็น 'list' หรืออื่นๆ
+        # ให้ใช้ Serializer ตัวใหม่ที่แก้ปัญหา null แล้ว
+        return RequestSerializer 
 
+    # ... (get_queryset(self) เหมือนเดิม) ...
     def get_queryset(self):
-        """
-        เลือก QuerySet ให้อัตโนมัติ (เวอร์ชันปลอดภัย)
-        """
         user = self.request.user
         
-        # --- นี่คือบรรทัดที่เราเพิ่ม (Safe Check) ---
-        # ถ้า User ไม่ได้ Login (เป็น Anonymous)
-        # ให้คืนค่าว่างทันที ห้ามไปยุ่งกับ .profile
         if not user.is_authenticated:
             return Request.objects.none()
-        # ------------------------------------------
             
-        # ถ้าผ่าน
         if user.profile.role == 'STUDENT':
             return Request.objects.filter(student=user).order_by('-created_at')
         elif user.profile.role != 'STUDENT':
@@ -110,6 +118,7 @@ class RequestViewSet(viewsets.ModelViewSet):
         
         return Request.objects.none()
 
+    # ... (perform_create(self, serializer) เหมือนเดิม) ...
     @transaction.atomic
     def perform_create(self, serializer):
         request_obj = serializer.save(student=self.request.user)
@@ -119,8 +128,36 @@ class RequestViewSet(viewsets.ModelViewSet):
             action="Submitted"
         )
 
+    # ⭐️ 3. เพิ่ม (Override) เมธอดนี้ ⭐️
+    @transaction.atomic # ใช้ transaction เพื่อความปลอดภัย
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Override เมธอดนี้เพื่อ "ดัก" การอัปเดตสถานะ
+        และสร้าง RequestHistory
+        """
+        request_obj = self.get_object()
+        new_status = request.data.get('status') # (เช่น 'Approved')
+
+        # เรียกใช้ partial_update "ของเดิม" (จาก ModelViewSet)
+        # เพื่อให้มันทำการ Validate (ด้วย RequestStatusUpdateSerializer)
+        # และ Save ข้อมูล
+        response = super().partial_update(request, *args, **kwargs)
+
+        # "หลังจาก" Save สำเร็จ (ถ้าไม่ Error)
+        if response.status_code == 200 and new_status:
+            # สร้าง History
+            RequestHistory.objects.create(
+                request=request_obj,
+                user=request.user, # คนที่กดอนุมัติ/ปฏิเสธ
+                action=f"Status changed to {new_status}"
+            )
+
+        return response
+
+
 # [ 4 ] ViewSets สำหรับส่วนประกอบย่อย
 # ----------------------------------------
+# ... (AttachmentViewSet และ RequestHistoryViewSet เหมือนเดิม) ...
 class AttachmentViewSet(viewsets.ModelViewSet):
     queryset = Attachment.objects.all()
     serializer_class = AttachmentSerializer

@@ -1,22 +1,38 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
-// แก้ไข: เปลี่ยนจาก '../components/AdvisorRequestlist' เป็น '../components/AdvisorRequestList'
-import AdvisorRequestList from '../components/AdvisorRequestList'; // Component แสดงตารางคำร้อง
+import AdvisorRequestList from '../components/AdvisorRequestList'; 
 
 function AdvisorDashboard() {
-    // ดึงข้อมูลผู้ใช้และฟังก์ชัน Logout จาก Store
     const user = useAuthStore((state) => state.user);
     const logout = useAuthStore((state) => state.logout);
     const navigate = useNavigate();
 
     const handleLogout = () => {
         logout(); 
-        navigate('/login'); // นำทางไปยังหน้า Login หลัง Logout
+        navigate('/login'); 
     };
 
-    // แสดงสถานะกำลังโหลดถ้าข้อมูลผู้ใช้ยังไม่มา
-    if (!user) return <div style={{ padding: '20px' }}>กำลังโหลดข้อมูลผู้ใช้...</div>;
+    // ⭐️ แก้ไข (1): เพิ่มการตรวจสอบ loadingUser จาก store
+    //เผื่อว่า user ยังเป็น null แต่กำลังโหลดอยู่
+    const loadingUser = useAuthStore((state) => state.loadingUser);
+    
+    if (!user && loadingUser) {
+        return <div style={{ padding: '20px' }}>กำลังโหลดข้อมูลผู้ใช้...</div>;
+    }
+    
+    // ⭐️ แก้ไข (2): ถ้าโหลดจบแล้ว แต่ user ยังคงเป็น null (เช่น token หมดอายุ)
+    // ให้แสดง Error หรือเด้งไปหน้า login (ในที่นี้แสดง Error)
+    if (!user) {
+        return (
+          <div style={{ padding: '20px', color: 'red' }}>
+             ไม่พบข้อมูลผู้ใช้ (Session อาจหมดอายุ) 
+             <button onClick={() => window.location.href = '/login'}>
+               กลับไปหน้า Login
+             </button>
+          </div>
+        );
+    }
 
     return (
         <div style={{ padding: '20px' }}>
@@ -32,8 +48,13 @@ function AdvisorDashboard() {
                 alignItems: 'center' 
             }}>
                 <div>
-                    <p style={{ margin: '0' }}><strong>ยินดีต้อนรับ, {user.first_name} {user.last_name}</strong></p>
-                    <p style={{ margin: '5px 0 0 0' }}><strong>Role:</strong> {user.profile?.role}</p>
+                    {/* ⭐️⭐️⭐️ แก้ไข 3: ใช้ ?. เพื่อความปลอดภัย ⭐️⭐️⭐️ */}
+                    <p style={{ margin: '0' }}>
+                      <strong>ยินดีต้อนรับ, {user?.first_name || ''} {user?.last_name || '(ผู้ใช้)'}</strong>
+                    </p>
+                    <p style={{ margin: '5px 0 0 0' }}>
+                      <strong>Role:</strong> {user.profile?.role}
+                    </p>
                 </div>
                 <button 
                     onClick={handleLogout} 
@@ -54,7 +75,7 @@ function AdvisorDashboard() {
 
             <h2>รายการคำร้องทั้งหมดที่ต้องดำเนินการ</h2>
             
-            {/* Component หลักที่แสดงรายการคำร้องและการจัดการสถานะ */}
+            {/* ปัญหาหน้าขาว อยู่ใน Component นี้ (ไฟล์ AdvisorRequestList.jsx) */}
             <AdvisorRequestList />
             
         </div>

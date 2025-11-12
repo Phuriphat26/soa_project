@@ -6,7 +6,6 @@ import axiosClient from './axiosClient';
 export const fetchRequests = async () => {
     try {
         const response = await axiosClient.get('/requests/');
-        // คืนค่าเฉพาะ results (รายการคำร้อง)
         return response.data.results; 
     } catch (error) {
         throw error.response?.data || error;
@@ -15,13 +14,12 @@ export const fetchRequests = async () => {
 
 /**
  * ดึงรายการคำร้องทั้งหมดสำหรับ Staff/Advisor
- * Endpoint นี้จะถูกปกป้องด้วย is_advisor
- * @returns {Promise<Array>} รายการคำร้องทั้งหมด
+ * (หมายเหตุ: Backend logic เดียวกับ fetchRequests, Django จะกรองตาม Role ให้เอง)
  */
 export const fetchAllRequests = async () => {
     try {
-        // ใช้ Endpoint เดียวกับ Student แต่ Backend จะรู้ว่าต้องคืนค่าทั้งหมด
         const response = await axiosClient.get('/requests/');
+        // ⭐️ Backend (RequestSerializer) ที่แก้ไขแล้วจะส่ง JSON ที่ถูกต้องมาให้
         return response.data.results; 
     } catch (error) {
         throw error.response?.data || error;
@@ -34,7 +32,7 @@ export const fetchAllRequests = async () => {
 export const fetchCategories = async () => {
     try {
         const response = await axiosClient.get('/categories/');
-        return response.data; 
+        return response.data.results; 
     } catch (error) {
         throw error.response?.data || error;
     }
@@ -58,10 +56,83 @@ export const fetchRequestTypes = async (categoryId) => {
 export const submitNewRequest = async (requestTypeId, details) => {
     try {
         const response = await axiosClient.post('/requests/', {
-            request_type_id: requestTypeId,
-            details: details,
+            request_type_id: parseInt(requestTypeId, 10),
+            details: details
         });
-        return response.data; 
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
+
+/**
+ * ⭐️⭐️⭐️ ฟังก์ชันนี้ถูกต้องแล้ว ⭐️⭐️⭐️
+ * อัปเดตสถานะคำร้อง (สำหรับ Advisor/Staff)
+ * มันจะเรียก 'partial_update' ใน RequestViewSet ที่เราเพิ่งแก้ไข
+ */
+export const updateRequestStatus = async (requestId, newStatus) => {
+    try {
+        // ใช้ .patch('/requests/123/', { status: 'Approved' })
+        const response = await axiosClient.patch(`/requests/${requestId}/`, { 
+            status: newStatus 
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
+
+/**
+ * (เพิ่มฟังก์ชันที่ขาดไป) อัปโหลดไฟล์แนบ
+ */
+export const uploadAttachment = async (requestId, formData) => {
+    try {
+        const response = await axiosClient.post(
+            `/requests/${requestId}/attachments/`, 
+            formData, 
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            }
+        );
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
+
+// ⭐️ ฟังก์ชันใหม่: ดึงรายชื่อผู้ใช้ทั้งหมด (สำหรับ Admin/Staff)
+export const fetchAllUsers = async () => {
+    try {
+        const response = await axiosClient.get('/users/'); 
+        return response.data.results || response.data; 
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
+
+/**
+ * ⭐️ ฟังก์ชันใหม่: เปลี่ยน Role ของผู้ใช้ (Role Promotion)
+ */
+export const updateRole = async (userId, newRole) => {
+    try {
+        const response = await axiosClient.post(`/users/${userId}/set_role/`, { 
+            role: newRole
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
+
+/**
+ * ⭐️ ฟังก์ชันใหม่: ดึงรายละเอียดคำร้องตาม ID
+ */
+export const fetchRequestById = async (requestId) => {
+    try {
+        const response = await axiosClient.get(`/requests/${requestId}/`);
+        return response.data; // คืนค่า Object คำร้อง
     } catch (error) {
         throw error.response?.data || error;
     }

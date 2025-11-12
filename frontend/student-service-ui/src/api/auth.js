@@ -1,12 +1,14 @@
-// src/api/auth.js
+// ไฟล์: src/api/auth.js
 
-// เปลี่ยนจาก import axios เป็น import axiosClient
 import axiosClient from './axiosClient'; 
 
-// *** ฟังก์ชัน Login (POST /api/token/) - ใช้ axiosClient ได้เลย ***
+// ⭐️ กำหนดค่าเริ่มต้นของ Role สำหรับการลงทะเบียนอัตโนมัติ
+// ล็อกให้เป็น 'student' เสมอ ตามแผน B
+const DEFAULT_REGISTER_ROLE = 'student'; 
+
+// *** ฟังก์ชัน Login ***
 export const loginUser = async (username, password) => {
   try {
-    // ไม่ต้องระบุ URL เต็ม เพราะ axiosClient มี baseURL แล้ว
     const response = await axiosClient.post(`/token/`, { 
       username: username,
       password: password,
@@ -14,17 +16,30 @@ export const loginUser = async (username, password) => {
     return response.data; 
 
   } catch (error) {
-    throw error.response.data; 
+    throw error.response?.data || error; 
   }
 };
 
-// *** ฟังก์ชัน Fetch User (GET /api/users/me/) - ไม่ต้องส่ง Token อีกแล้ว ***
-export const fetchCurrentUser = async () => { // ลบ (token) ออก
+// *** ฟังก์ชัน Fetch User ***
+export const fetchCurrentUser = async () => { 
   try {
-    const response = await axiosClient.get(`/users/me/`); // ไม่ต้องใส่ headers แล้ว
+    const response = await axiosClient.get(`/users/me/`); 
     return response.data; 
 
   } catch (error) {
-    throw error.response.data; 
+    throw error.response?.data || error; 
   }
+};
+
+// ⭐️ ฟังก์ชัน Register User (ใช้ Role ที่ถูกล็อกไว้)
+export const registerUser = async (userData) => { 
+    // Endpoint จะถูกล็อกเป็น /register/student/
+    const endpoint = `/register/${DEFAULT_REGISTER_ROLE}/`; 
+    
+    try {
+        const response = await axiosClient.post(endpoint, userData); 
+        return response.data; 
+    } catch (error) {
+        throw error.response?.data || error; 
+    }
 };

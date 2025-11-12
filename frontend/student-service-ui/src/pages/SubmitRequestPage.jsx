@@ -72,14 +72,36 @@ function SubmitRequestPage() {
             setSelectedCategory(''); 
 
         } catch (err) {
-            console.error("Submission failed:", err);
-            setError(`ยื่นคำร้องไม่สำเร็จ: ${err.details || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์'}`);
+            console.error("Submission failed:", err); // err คือ Object ที่ Django ส่งมา
+            
+            // ⭐️⭐️⭐️ (โค้ดที่อัปเดต) ⭐️⭐️⭐️
+            // DRF Validation Errors (400) จะมาในรูปแบบ { field_name: ["message"] }
+            // เราจะดึงข้อความ Error แรกที่เจอออกมาแสดง
+            let specificErrorMessage = '';
+            if (err && typeof err === 'object' && !Array.isArray(err)) {
+                // วนลูปหา Key แรก (เช่น "request_type", "user", "details")
+                const errorKey = Object.keys(err)[0]; 
+                if (errorKey && Array.isArray(err[errorKey]) && err[errorKey].length > 0) {
+                    // ดึงข้อความแรกออกมา
+                    specificErrorMessage = `${errorKey}: ${err[errorKey][0]}`;
+                } else if (err.detail) {
+                    // (เผื่อไว้สำหรับ Error แบบ 401 หรือ 403)
+                    specificErrorMessage = err.detail;
+                }
+            }
+            
+            setError(`ยื่นคำร้องไม่สำเร็จ: ${specificErrorMessage || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์'}`);
+            // ⭐️⭐️⭐️ จบการแก้ไข ⭐️⭐️⭐️
         }
     };
 
     // ส่วนแสดงผล (Render)
     if (loading) return <div style={{ padding: '20px' }}>กำลังโหลดแบบฟอร์ม...</div>;
-    if (error && !success) return <div style={{ padding: '20px', color: 'red' }}>Error: {error}</div>;
+
+    // ⭐️ (ปรับปรุง) แสดง Error แม้ว่าจะ Success แล้ว (เผื่อกด Submit ซ้ำ)
+    if (error) {
+        // ไม่ต้องเช็ค !success
+    }
 
     return (
         <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
@@ -88,6 +110,13 @@ function SubmitRequestPage() {
             {success && (
                 <div style={{ background: '#d4edda', color: '#155724', border: '1px solid #c3e6cb', padding: '10px', marginBottom: '20px' }}>
                     ยื่นคำร้องสำเร็จแล้ว! <button onClick={() => navigate('/')}>กลับสู่ Dashboard</button>
+                </div>
+            )}
+            
+            {/* ⭐️ (เพิ่ม) แสดง Error ที่ดักจับได้ ⭐️ */}
+            {error && (
+                <div style={{ background: '#f8d7da', color: '#721c24', border: '1px solid #f5c6cb', padding: '10px', marginBottom: '20px' }}>
+                    <strong>Error:</strong> {error}
                 </div>
             )}
 
@@ -100,6 +129,7 @@ function SubmitRequestPage() {
                         onChange={handleCategoryChange} 
                         style={{ width: '100%', padding: '8px' }}
                         required
+                        disabled={success} // ⭐️ (ปรับปรุง) Disable หลังยื่นสำเร็จ
                     >
                         <option value="">-- กรุณาเลือกหมวดหมู่ --</option>
                         {categories.map(cat => (
@@ -117,14 +147,14 @@ function SubmitRequestPage() {
                             onChange={(e) => setSelectedRequestType(e.target.value)} 
                             style={{ width: '100%', padding: '8px' }}
                             required
-                            disabled={requestTypes.length === 0}
+                            disabled={requestTypes.length === 0 || success} // ⭐️ (ปรับปรุง)
                         >
                             <option value="">-- กรุณาเลือกประเภทคำร้อง --</option>
                             {requestTypes.map(type => (
                                 <option key={type.id} value={type.id}>{type.name}</option>
                             ))}
                         </select>
-                        {requestTypes.length === 0 && <p style={{ color: 'gray', fontSize: 'small' }}>*ไม่พบฟอร์มในหมวดหมู่นี้</p>}
+                        {requestTypes.length === 0 && !success && <p style={{ color: 'gray', fontSize: 'small' }}>*ไม่พบฟอร์มในหมวดหมู่นี้</p>}
                     </div>
                 )}
 
@@ -137,11 +167,24 @@ function SubmitRequestPage() {
                         rows="5"
                         style={{ width: '100%', padding: '8px', resize: 'vertical' }}
                         required
+                        disabled={success} // ⭐️ (ปรับปรุง)
                         placeholder="เช่น ขอถอนรายวิชา SOA101 เนื่องจาก..."
                     />
                 </div>
 
-                <button type="submit" style={{ marginTop: '20px', padding: '10px 20px', background: 'blue', color: 'white', border: 'none', cursor: 'pointer' }}>
+                <button 
+                    type="submit" 
+                    style={{ 
+                        marginTop: '20px', 
+                        padding: '10px 20px', 
+                        background: 'blue', 
+                        color: 'white', 
+                        border: 'none', 
+                        cursor: 'pointer',
+                        opacity: success ? 0.5 : 1 // ⭐️ (ปรับปรุง)
+                    }}
+                    disabled={success} // ⭐️ (ปรับปรุง)
+                >
                     ส่งคำร้อง
                 </button>
             </form>
