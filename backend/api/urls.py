@@ -22,9 +22,11 @@ urlpatterns = [
     path('register/student/', views.StudentRegisterView.as_view(), name='register-student'),
     path('register/staff/', views.StaffRegisterView.as_view(), name='register-staff'),
     # -------------------------------
-
+    path('users/<int:user_id>/set_role/', views.SetUserRoleView.as_view(), name='set-user-role'),
     path('users/me/', views.UserView.as_view(), name='user-me'),
-    
+    path('users/', views.UserListView.as_view(), name='user-list'),
+    path('users/<int:pk>/', views.UserDetailView.as_view(), name='user-detail'),
+    path('users/create/', views.UserCreateView.as_view(), name='user-create'),
     # รวม URL ทั้งหมดที่ Router สร้างขึ้น
     path('', include(router.urls)),
 ]

@@ -3,12 +3,12 @@ from django.contrib.auth.models import User
 from rest_framework import viewsets, generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-
+from .models import Profile # 👈 สมมติว่า Role อยู่ใน Profile นะครับ (ถ้าไม่ ให้แก้ตรงนี้)
 from .models import (
     Category, RequestType, Request, RequestHistory, 
     Attachment, Notification
 )
-
+from rest_framework.views import APIView
 # --- (1) Import Serializer ทั้งหมดที่ "จำเป็น" ---
 from .serializers import (
     UserSerializer, CategorySerializer, 
@@ -20,7 +20,7 @@ from .serializers import (
     RequestCreateSerializer,
     RequestStatusUpdateSerializer  # ⭐️ 1. Import ตัวใหม่เข้ามา
 )
-
+from .serializers import AdminUserCreateSerializer, AdminUserUpdateSerializer 
 from .permissions import IsStudent, IsStaff 
 
 # [ 1 ] Views สำหรับ User และ Authentication
@@ -44,7 +44,7 @@ class UserView(generics.RetrieveUpdateAPIView):
 # [ 2 ] Views สำหรับข้อมูลหลัก
 # ----------------------------------------
 # ... (CategoryViewSet, RequestTypeViewSet, NotificationViewSet เหมือนเดิม) ...
-class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
+class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticated] 
@@ -77,7 +77,64 @@ class NotificationViewSet(viewsets.ModelViewSet):
         notification.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+class UserListView(generics.ListAPIView):
+    queryset = User.objects.all().order_by('username')
+    serializer_class = UserSerializer
+    
+    # ⭐️ 2. ตั้งสิทธิ์: เฉพาะ Admin (is_staff=True) ที่ดึงได้ ⭐️
+    permission_classes = [permissions.IsAdminUser]
 
+class UserCreateView(generics.CreateAPIView):
+    """
+    API View สำหรับ Admin ในการสร้าง User ใหม่
+    """
+    queryset = User.objects.all()
+    serializer_class = AdminUserCreateSerializer
+    permission_classes = [permissions.IsAdminUser] # 👈 ล็อกเฉพาะ Admin
+
+class SetUserRoleView(APIView):
+    """
+    View สำหรับอัปเดต Role (เวอร์ชันอัปเกรด: สร้าง Profile ถ้ายังไม่มี)
+    """
+    permission_classes = [permissions.IsAdminUser] 
+
+    def post(self, request, user_id):
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        new_role = request.data.get('role')
+        if not new_role:
+            return Response({'error': 'Role not provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # ⭐️ 1. นี่คือส่วนที่แก้ไข: ⭐️
+            # ลองหา Profile, หรือ "สร้างใหม่" ถ้ายังไม่มี
+            # (get_or_create จะคืนค่า (object, created_boolean))
+            profile, created = Profile.objects.get_or_create(user=user)
+            
+            if created:
+                # ถ้าเพิ่งสร้าง Profile (เช่น user ที่เพิ่ง register)
+                print(f"Created new profile for user: {user.username}")
+
+            # 2. ตั้งค่า Role ใหม่
+            profile.role = new_role
+            profile.save()
+            
+            # 3. ส่งข้อมูล User ที่อัปเดตแล้วกลับไป
+            # (เราอาจจะต้องใช้ UserSerializer ที่นี่ แต่ส่งแบบง่ายไปก่อน)
+            return Response({
+                'status': f'Role updated to {new_role}',
+                'user_id': user.id,
+                'new_role': new_role
+            }, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            # ดักจับ Error อื่นๆ
+            print(f"Error updating/creating profile: {str(e)}")
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+# ... (โค้ด View อื่นๆ ของคุณ) ...
 # [ 3 ] ViewSet หลัก: Request
 # ----------------------------------------
 class RequestViewSet(viewsets.ModelViewSet):
@@ -167,3 +224,15 @@ class RequestHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = RequestHistory.objects.all()
     serializer_class = RequestHistorySerializer
     permission_classes = [permissions.IsAuthenticated]
+
+class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    API View สำหรับ Admin ในการ
+    - ดึงข้อมูล (GET)
+    - แก้ไข (PUT/PATCH)
+    - ลบ (DELETE)
+    ... ผู้ใช้ตาม ID
+    """
+    queryset = User.objects.all().order_by('id')
+    serializer_class = AdminUserUpdateSerializer # 👈 ใช้ Serializer แก้ไข
+    permission_classes = [permissions.IsAdminUser] # 👈 ล็อกเฉพาะ Admin

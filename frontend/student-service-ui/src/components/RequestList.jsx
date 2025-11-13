@@ -1,85 +1,103 @@
 import React, { useState, useEffect } from 'react';
-import { fetchRequests } from '../api/requests'; // ⭐️ แก้ไข: ลบ .js ออกเพื่อให้ React Resolve module ได้ถูกต้อง
 import { Link } from 'react-router-dom';
+// 1. Import API สำหรับดึง "คำร้องของฉัน" (Path นี้ถูกต้องเทียบกับ src/components/)
+import { fetchRequests } from '../api/requests';
 
 function RequestList() {
-    const [requests, setRequests] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const loadRequests = async () => {
-            try {
-                const data = await fetchRequests();
-                setRequests(data);
-            } catch (err) {
-                console.error("Failed to fetch requests:", err);
-                setError("ไม่สามารถดึงรายการคำร้องได้");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadRequests();
-    }, []);
-
-    if (loading) {
-        return <p>กำลังโหลดรายการคำร้อง...</p>;
+  // 2. โหลดข้อมูลคำร้องเมื่อเปิดหน้า
+  const loadMyRequests = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchRequests(); // 👈 API นี้จะดึงเฉพาะของ Student ที่ Login
+      setRequests(data);
+    } catch (err) {
+      console.error('Error fetching my requests:', err);
+      setError('ไม่สามารถดึงข้อมูลคำร้องได้');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (error) {
-        return <p style={{ color: 'red' }}>Error: {error}</p>;
+  useEffect(() => {
+    loadMyRequests();
+  }, []);
+
+  // 3. ฟังก์ชันสำหรับแปลง Status เป็นสี
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Approved':
+        return 'green';
+      case 'Rejected':
+        return 'red';
+      case 'Pending':
+        return 'orange';
+      default:
+        return 'grey';
     }
+  };
 
-    if (requests.length === 0) {
-        return <p>คุณยังไม่มีคำร้องที่ยื่นไว้ในระบบ</p>;
-    }
+  if (loading) return <p>กำลังโหลดรายการคำร้อง...</p>;
+  if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
-    return (
-        <div>
-            <h2>รายการคำร้องทั้งหมด ({requests.length} รายการ)</h2>
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
-                <thead>
-                    <tr style={{ background: '#f2f2f2' }}>
-                        <th style={{ border: '1px solid #ddd', padding: '8px' }}>ID</th>
-                        <th style={{ border: '1px solid #ddd', padding: '8px' }}>ประเภทคำร้อง</th>
-                        <th style={{ border: '1px solid #ddd', padding: '8px' }}>สถานะ</th>
-                        <th style={{ border: '1px solid #ddd', padding: '8px' }}>รายละเอียดย่อ</th> 
-                        <th style={{ border: '1px solid #ddd', padding: '8px' }}>การดำเนินการ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {requests.map(req => (
-                        <tr key={req.id}>
-                            <td style={{ border: '1px solid #ddd', padding: '8px' }}>{req.id}</td>
-                            {/* req.request_type เป็น object จาก Backend */}
-                            <td style={{ border: '1px solid #ddd', padding: '8px' }}>{req.request_type.name}</td>
-                            <td style={{ border: '1px solid #ddd', padding: '8px', color: req.status === 'Pending Approval' ? 'orange' : 'green' }}>
-                                {req.status}
-                            </td>
-                            <td style={{ border: '1px solid #ddd', padding: '8px' }}>{req.details.substring(0, 50)}...</td>
-                            {/* เพิ่มคอลัมน์ Link ดูรายละเอียด */}
-                            <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                                <Link 
-                                    to={`/requests/${req.id}`} 
-                                    style={{ 
-                                        padding: '5px 10px', 
-                                        background: '#007bff', 
-                                        color: 'white', 
-                                        textDecoration: 'none',
-                                        borderRadius: '3px',
-                                        fontSize: '14px'
-                                    }}
-                                >
-                                    ดูรายละเอียด
-                                </Link>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    );
+  return (
+    <table
+      className="table table-striped table-bordered"
+      style={{ marginTop: '20px' }}
+    >
+      <thead className="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>ประเภทคำร้อง</th>
+          <th>สถานะ</th>
+          <th>วันที่ยื่น</th>
+          <th>ดูรายละเอียด</th>
+        </tr>
+      </thead>
+      <tbody>
+        {requests.length === 0 ? (
+          <tr>
+            <td colSpan="5" style={{ textAlign: 'center' }}>
+              คุณยังไม่เคยยื่นคำร้องใดๆ
+            </td>
+          </tr>
+        ) : (
+          requests.map((req) => (
+            <tr key={req.id}>
+              <td>{req.id}</td>
+              {/* ⭐️ หมายเหตุ: API (RequestSerializer) ของคุณ
+                  ส่ง request_type และ user มาเป็น Object ย่อย
+              */}
+              <td>{req.request_type?.name || 'N/A'}</td>
+              <td>
+                <span
+                  style={{
+                    fontWeight: 'bold',
+                    color: getStatusColor(req.status),
+                  }}
+                >
+                  {req.status}
+                </span>
+              </td>
+              <td>{new Date(req.created_at).toLocaleDateString('th-TH')}</td>
+              <td>
+                <Link
+                  to={`/requests/${req.id}`}
+                  className="btn btn-info btn-sm"
+                >
+                  ดูรายละเอียด
+                </Link>
+              </td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  );
 }
 
 export default RequestList;

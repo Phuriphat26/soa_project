@@ -8,7 +8,7 @@ from django.db import transaction
 from .models import Profile
 # [ 1 ] Serializers สำหรับแสดงข้อมูลพื้นฐาน (ส่วนใหญ่ Read-Only)
 # -----------------------------------------------------------
-
+from .models import Profile
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
@@ -175,3 +175,86 @@ class RequestDetailSerializer(serializers.ModelSerializer):
             'id', 'student', 'request_type', 'details', 'status', 
             'created_at', 'updated_at', 'history', 'attachments'
         ]
+
+class AdminUserCreateSerializer(serializers.ModelSerializer):
+    """
+    Serializer สำหรับ Admin ในการสร้าง User ใหม่ (พร้อม Role)
+    """
+    # 1. รับ Role มาตรงๆ
+    role = serializers.CharField(write_only=True)
+    
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password', 'role']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    @transaction.atomic
+    def create(self, validated_data):
+        # 2. แยก Role ออกมาจากข้อมูล
+        role_data = validated_data.pop('role', 'Student') # (ถ้าไม่ส่งมา ให้เป็น Student)
+        
+        # 3. สร้าง User (Django จะ Hash Password ให้อัตโนมัติ)
+        user = User.objects.create_user(**validated_data)
+        
+        # 4. สร้าง Profile (หรืออัปเดต) ให้ User นี้ทันที
+        # (ใช้ get_or_create เพื่อความปลอดภัย)
+        Profile.objects.update_or_create(
+            user=user, 
+            defaults={'role': role_data}
+        )
+        return user
+    
+class AdminUserUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer สำหรับ Admin ในการ "แก้ไข" ข้อมูล User
+    (อนุญาตเฉพาะ username และ email)
+    """
+    class Meta:
+        model = User
+        fields = ['username', 'email'] # 👈 อนุญาตแค่ 2 field นี้
+        extra_kwargs = {
+            'username': {'required': True},
+        }
+
+    def validate_username(self, value):
+        # ⭐️ ป้องกัน Username ซ้ำ (ขณะแก้ไข)
+        # (ยกเว้นถ้าเป็น Username ของตัวเอง)
+        if self.instance and self.instance.username == value:
+            return value # 👈 ไม่ได้เปลี่ยน Username
+        
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("A user with this username already exists.")
+        return value
+
+    def validate_email(self, value):
+        # ⭐️ ป้องกัน Email ซ้ำ (ขณะแก้ไข)
+        if self.instance and self.instance.email == value:
+            return value # 👈 ไม่ได้เปลี่ยน Email
+            
+        if value and User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+class AdminUserCreateSerializer(serializers.ModelSerializer):
+    """
+    Serializer สำหรับ Admin ในการสร้าง User ใหม่ (พร้อม Role)
+    """
+    role = serializers.CharField(write_only=True)
+    
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password', 'role']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    @transaction.atomic
+    def create(self, validated_data):
+        role_data = validated_data.pop('role', 'Student')
+        user = User.objects.create_user(**validated_data)
+        Profile.objects.update_or_create(
+            user=user, 
+            defaults={'role': role_data}
+        )
+        return user
