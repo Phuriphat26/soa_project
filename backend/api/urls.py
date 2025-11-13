@@ -11,6 +11,7 @@ router.register(r'request-types', views.RequestTypeViewSet, basename='requesttyp
 router.register(r'requests', views.RequestViewSet, basename='request')
 router.register(r'notifications', views.NotificationViewSet, basename='notification')
 # (เราเพิ่ม 'basename' เข้าไป เพื่อความปลอดภัย กัน Error ในอนาคต)
+router.register(r'attachments', views.AttachmentViewSet)
 
 
 # นี่คือ URL ที่เราสร้างเอง (ที่ไม่ใช่ ViewSet)
@@ -28,5 +29,6 @@ urlpatterns = [
     path('users/<int:pk>/', views.UserDetailView.as_view(), name='user-detail'),
     path('users/create/', views.UserCreateView.as_view(), name='user-create'),
     # รวม URL ทั้งหมดที่ Router สร้างขึ้น
+    
     path('', include(router.urls)),
 ]

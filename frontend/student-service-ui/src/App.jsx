@@ -1,4 +1,3 @@
-import React, { useEffect } from 'react';
 import {
   Routes,
   Route,
@@ -9,11 +8,10 @@ import {
   Outlet,
 } from 'react-router-dom';
 import useAuthStore from './stores/authStore.js';
-
-// ⭐ Import CSS หลัก
+import React, { useEffect } from 'react';
 import './index.css';
 
-// ⭐ Import Pages
+// Page Imports
 import AdminPage from './pages/AdminPage.jsx';
 import RequestDetailPage from './pages/RequestDetailPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
@@ -24,14 +22,16 @@ import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import CategoryManagement from './pages/admin/CategoryManagement.jsx';
+import RequestTypeManagement from './pages/admin/RequestTypeManagement.jsx';
 
-// ⭐ Guard Component
+// ⭐️ Import กระดิ่งแจ้งเตือน
+import NotificationBell from './components/NotificationBell.jsx';
+
+// Guard Component
 import RoleGuard from './components/RoleGuard.jsx';
 
 
-// ─────────────────────────────────────────────
-// 🧩 Layout Component
-// ─────────────────────────────────────────────
+// ⭐️ Layout สำหรับจัดหน้า
 function PageLayout() {
   const location = useLocation();
 
@@ -48,25 +48,27 @@ function PageLayout() {
     '/admin/dashboard',
   ];
 
-  const isCenteredPage =
-    centeredPages.includes(location.pathname) || location.state?.is404;
+  const isCenteredPage = centeredPages.includes(location.pathname) || location.state?.is404;
 
-  return isCenteredPage ? (
-    <div className="page-content-wrapper">
-      <Outlet />
-    </div>
-  ) : (
-    <div className="container" style={{ paddingTop: 20, paddingBottom: 20 }}>
+  if (isCenteredPage) {
+    return (
+      <div className="page-content-wrapper">
+        <Outlet />
+      </div>
+    );
+  }
+
+  return (
+    <div className="container" style={{ paddingTop: '20px', paddingBottom: '20px' }}>
       <Outlet />
     </div>
   );
 }
 
-// ─────────────────────────────────────────────
-// 🚫 Access Denied Page
-// ─────────────────────────────────────────────
+
+// ⭐️ Access Denied Page
 const AccessDeniedPage = () => (
-  <div className="card" style={{ maxWidth: 500, textAlign: 'center', margin: 'auto' }}>
+  <div className="card" style={{ maxWidth: '500px', textAlign: 'center', margin: 'auto', marginTop: '3rem' }}>
     <div className="card-header">
       <h2>🚫 Access Denied</h2>
     </div>
@@ -79,11 +81,10 @@ const AccessDeniedPage = () => (
   </div>
 );
 
-// ─────────────────────────────────────────────
-// 🕳️ Not Found Page
-// ─────────────────────────────────────────────
+
+// ⭐️ 404 Page
 const NotFoundPage = () => (
-  <div className="card" style={{ maxWidth: 500, textAlign: 'center', margin: 'auto' }}>
+  <div className="card" style={{ maxWidth: '500px', textAlign: 'center', margin: 'auto', marginTop: '3rem' }}>
     <div className="card-header">
       <h2>404 - Not Found</h2>
     </div>
@@ -97,9 +98,29 @@ const NotFoundPage = () => (
 );
 
 
-// ─────────────────────────────────────────────
-// 🌐 Main App Component
-// ─────────────────────────────────────────────
+// ⭐️ Root Handler - เปลี่ยนเส้นทางตาม Role
+function RootHandler() {
+  const user = useAuthStore((state) => state.user);
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const role = user.profile?.role || '';
+
+  if (role === 'Student') {
+    return <Navigate to="/dashboard" replace />;
+  } else if (role === 'Advisor' || role.includes('Staff')) {
+    return <Navigate to="/advisor/dashboard" replace />;
+  } else if (role === 'Admin') {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  return <Navigate to="/login" replace />;
+}
+
+
+// ⭐️ Main App
 function App() {
   const user = useAuthStore((state) => state.user);
   const loadUserFromToken = useAuthStore((state) => state.loadUserFromToken);
@@ -108,10 +129,15 @@ function App() {
   const location = useLocation();
 
   useEffect(() => {
+    console.log('🔍 User:', user);
+    console.log('🔍 Token:', useAuthStore.getState().token);
+  }, [user]);
+
+  useEffect(() => {
     if (!user && useAuthStore.getState().token) {
       loadUserFromToken();
     }
-  }, [user, loadUserFromToken]);
+  }, [loadUserFromToken, user]);
 
   const handleLogout = () => {
     logout();
@@ -119,12 +145,14 @@ function App() {
   };
 
   const isActive = (path, exact = false) => {
-    return exact ? location.pathname === path : location.pathname.startsWith(path);
+    return exact
+      ? location.pathname === path
+      : location.pathname.startsWith(path);
   };
 
   return (
     <>
-      {/* ──────────────── 🔹 Navigation Bar ──────────────── */}
+      {/* ⭐️ Navigation Bar */}
       <nav className="app-nav">
         <Link to="/" className="brand-logo">
           ระบบคำร้อง<span>ออนไลน์</span>
@@ -150,7 +178,6 @@ function App() {
 
           {user && (
             <>
-              {/* 🔹 Student Links */}
               {user.profile?.role === 'Student' && (
                 <>
                   <Link
@@ -168,27 +195,25 @@ function App() {
                 </>
               )}
 
-              {/* 🔹 Advisor / Staff Links */}
-              {(user.profile?.role === 'Advisor' || user.profile?.role === 'Staff') && (
+              {(user.profile?.role === 'Advisor' ||
+                user.profile?.role?.includes('Staff')) && (
                 <Link
                   to="/advisor/dashboard"
                   className={isActive('/advisor/dashboard', true) ? 'active' : ''}
                 >
-                  Advisor Dashboard
+                  จัดการคำร้อง
                 </Link>
               )}
 
-              {/* 🔹 Admin Links */}
               {user.profile?.role === 'Admin' && (
                 <Link
                   to="/admin/dashboard"
-                  className={isActive('/admin', false) ? 'active' : ''}
+                  className={isActive('/admin', true) ? 'active' : ''}
                 >
                   แผงควบคุม Admin
                 </Link>
               )}
 
-              {/* 🔹 Profile Edit */}
               <Link
                 to="/profile/edit"
                 className={isActive('/profile/edit', true) ? 'active' : ''}
@@ -196,7 +221,9 @@ function App() {
                 แก้ไขโปรไฟล์
               </Link>
 
-              {/* 🔹 Logout */}
+              {/* ⭐️ กระดิ่งแจ้งเตือน */}
+              <NotificationBell />
+
               <button onClick={handleLogout} className="btn-nav logout-btn">
                 ออกจากระบบ
               </button>
@@ -205,18 +232,15 @@ function App() {
         </div>
       </nav>
 
-      {/* ──────────────── 📜 Routes ──────────────── */}
+      {/* ⭐️ Routes */}
       <Routes>
         <Route element={<PageLayout />}>
-          {/* Root */}
           <Route path="/" element={<RootHandler />} />
-
-          {/* Auth */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/access-denied" element={<AccessDeniedPage />} />
 
-          {/* Student */}
+          {/* Student Routes */}
           <Route
             path="/dashboard"
             element={
@@ -238,7 +262,7 @@ function App() {
           <Route
             path="/advisor/dashboard"
             element={
-              <RoleGuard allowedRoles={['Advisor', 'Staff', 'Admin']}>
+              <RoleGuard allowedRoles={['Advisor', 'Staff', 'Admin', 'Staff (Finance)']}>
                 <AdvisorDashboard />
               </RoleGuard>
             }
@@ -269,6 +293,14 @@ function App() {
               </RoleGuard>
             }
           />
+          <Route
+            path="/admin/categories/:categoryId/types"
+            element={
+              <RoleGuard allowedRoles={['Admin']}>
+                <RequestTypeManagement />
+              </RoleGuard>
+            }
+          />
 
           {/* Common */}
           <Route
@@ -289,42 +321,12 @@ function App() {
           />
 
           {/* 404 */}
-          <Route
-            path="*"
-            element={<Navigate to="/404" replace state={{ is404: true }} />}
-          />
           <Route path="/404" element={<NotFoundPage />} />
+          <Route path="*" element={<Navigate to="/404" replace state={{ is404: true }} />} />
         </Route>
       </Routes>
     </>
   );
-}
-
-// ─────────────────────────────────────────────
-// 🧭 Root Handler (Redirect ตาม Role)
-// ─────────────────────────────────────────────
-function RootHandler() {
-  const user = useAuthStore((state) => state.user);
-  const loadingUser = useAuthStore((state) => state.loadingUser);
-
-  if (!user && (useAuthStore.getState().token || loadingUser)) {
-    return <div style={{ padding: '20px', textAlign: 'center' }}>กำลังโหลดข้อมูลผู้ใช้...</div>;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  const userRole = user.profile?.role;
-
-  if (userRole === 'Admin') return <Navigate to="/admin/dashboard" replace />;
-  if (userRole === 'Advisor' || userRole === 'Staff')
-    return <Navigate to="/advisor/dashboard" replace />;
-  if (userRole === 'Student') return <Navigate to="/dashboard" replace />;
-
-  console.error('Unknown user role:', userRole);
-  localStorage.clear();
-  return <Navigate to="/login" replace />;
 }
 
 export default App;

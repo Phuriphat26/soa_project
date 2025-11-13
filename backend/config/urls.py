@@ -1,32 +1,18 @@
+# backend/urls.py
+
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
-# --- Import ส่วนของ DRF-YASG (Swagger) ---
-from rest_framework import permissions
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
-# ----------------------------------------
+# ⭐️ 1. Import เฉพาะ 'drf-spectacular'
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
-# --- Import ส่วนของ SIMPLEJWT (Token) ---
+# ⭐️ 2. Import แค่ 'simplejwt'
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-# ----------------------------------------
-
-# --- ตั้งค่าหน้าตาของ Swagger ---
-schema_view = get_schema_view(
-   openapi.Info(
-      title="Student Service API",
-      default_version='v1',
-      description="API Documentation for Student Service System (Project V3)",
-      contact=openapi.Contact(email="contact@student.service.local"),
-   ),
-   public=True,
-   permission_classes=(permissions.AllowAny,),
-)
-# ----------------------------------------
-
 
 urlpatterns = [
     # 1. หน้า Admin ของ Django
@@ -35,11 +21,16 @@ urlpatterns = [
     # 2. API หลักของเรา (โอนสายไปที่ api/urls.py)
     path('api/', include('api.urls')),
 
-    # 3. API สำหรับ JWT (Login/Refresh Token) (ตามโจทย์)
+    # 3. API สำหรับ JWT (Login/Refresh Token)
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
-    # 4. API Docs (Swagger) (ตามโจทย์)
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    # 4. API Docs (Swagger - drf-spectacular)
+    # (เราลบ drf-yasg ที่ชื่อ 'swagger/' และ 'redoc/' ออกไปแล้ว)
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]
+
+# 5. (สำคัญ) สำหรับแสดงไฟล์ Media (ที่เราทำไว้)
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

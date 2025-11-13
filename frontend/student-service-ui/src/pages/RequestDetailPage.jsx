@@ -106,7 +106,7 @@ function RequestDetailPage() {
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
-
+      formData.append('request', requestId);
       await uploadAttachment(requestId, formData);
 
       // ⭐️ 3. แสดงข้อความ Success

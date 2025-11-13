@@ -11,15 +11,13 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta # ⭐️ Import สำหรับ SIMPLE_JWT
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-0nzfenix*td&-fdsb5h_n%4k&e6krw%d4=gpyl-lb%o0ui3k0d'
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -28,7 +26,7 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
-
+# 1. INSTALLED_APPS
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -36,15 +34,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # Third-party apps
     'corsheaders',
-
     'rest_framework',
     'rest_framework_simplejwt',
-    'drf_yasg',
-
+    'drf_yasg',          
+    'drf_spectacular',   
+    
+    # Local apps
     'api.apps.ApiConfig', 
 ]
 
+# 2. MIDDLEWARE
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -77,9 +79,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
+# 3. Database
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -88,9 +88,7 @@ DATABASES = {
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
-
+# 4. Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -107,55 +105,69 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
-
+# 5. Internationalization
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
+# 6. Static files
 STATIC_URL = 'static/'
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# --- 7. การตั้งค่า REST FRAMEWORK (รวมทุกอย่างไว้ที่นี่) ---
 REST_FRAMEWORK = {
-    # ตั้งค่าระบบยืนยันตัวตน (Authentication) (ตามโจทย์)
+    # 7.1 ระบบยืนยันตัวตน (Authentication)
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     
-    # ตั้งค่าระบบสิทธิ์ (Permission)
+    # 7.2 ระบบสิทธิ์ (Permission)
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated', # ปิดกั้นทุกคนที่ไม่ได้ Login เป็น Default
+        'rest_framework.permissions.IsAuthenticated', 
     ),
     
-    # ตั้งค่าสำหรับ Pagination (ถ้ามี)
+    # 7.3 ตั้งค่าสำหรับ API Docs (Spectacular)
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    
+    # 7.4 ตั้งค่าสำหรับ Pagination (ถ้ามี)
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10
 }
 
-# --- การตั้งค่า SIMPLE JWT ---
-# (เราจะตั้งค่าให้ Token ใช้งานได้ 1 วัน และ Refresh ได้ 7 วัน)
-from datetime import timedelta
+
+# --- 8. การตั้งค่า SIMPLE JWT (รวมทุกอย่างไว้ที่นี่) ---
 SIMPLE_JWT = {
+    # 8.1 กำหนดอายุ Token
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+
+    # 8.2 ⭐️ [แก้ไขปัญหา Postman] ให้รองรับ Header แบบ 'Bearer' และ 'JWT'
+    'AUTH_HEADER_TYPES': ('Bearer', 'JWT'),
 }
-# settings.py
+
+
+# --- 9. การตั้งค่าสำหรับ Swagger/Spectacular ---
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'ระบบคำร้องออนไลน์ (Student Request API)',
+    'DESCRIPTION': 'API สำหรับระบบยื่นคำร้องออนไลน์ในองค์กร (โครงงานประจำวิชา)',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False, 
+}
+
+
+# --- 10. การตั้งค่า CORS (ถูกต้องแล้ว) ---
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",       # สำหรับ Vite Dev Server (Frontend)
+    "http://localhost:5173", 
     "http://127.0.0.1:5173",
 ]
-
 CORS_ALLOW_CREDENTIALS = True
-# ...
+
+
+# --- 11. การตั้งค่า Media (ถูกต้องแล้ว) ---
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

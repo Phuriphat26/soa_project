@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { fetchAllRequests, updateRequestStatus } from '../api/requests';
-import { useNavigate } from 'react-router-dom'; // ⭐️ Import useNavigate
+// ⭐️ 1. Import deleteRequest
+import { fetchAllRequests, updateRequestStatus, deleteRequest } from '../api/requests';
+import { useNavigate } from 'react-router-dom';
 
 function AdvisorRequestList() {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [isUpdating, setIsUpdating] = useState(false); // State สำหรับป้องกันการคลิกซ้ำ
-    const navigate = useNavigate(); // ⭐️ ประกาศใช้งาน
+    const [isUpdating, setIsUpdating] = useState(false); 
+    const navigate = useNavigate(); 
 
     // ฟังก์ชันดึงข้อมูลหลัก
     const loadRequests = async () => {
@@ -15,8 +16,7 @@ function AdvisorRequestList() {
         setError(null);
         try {
             const data = await fetchAllRequests();
-            // ⭐️⭐️⭐️ แก้ไข 1: ป้องกัน data เป็น null/undefined ⭐️⭐️⭐️
-            setRequests(data || []); 
+            setRequests(data); 
         } catch (err) {
             console.error("Failed to fetch all requests:", err);
             setError("ไม่สามารถดึงรายการคำร้องทั้งหมดได้");
@@ -31,7 +31,7 @@ function AdvisorRequestList() {
     
     // ฟังก์ชันสำหรับจัดการการอนุมัติ/ปฏิเสธ
     const handleUpdateStatus = async (requestId, newStatus) => {
-        const actionText = newStatus === 'Approved' ? 'อนุมัติ' : 'ปฏิเสธ';
+        const actionText = newStatus === 'APPROVED' ? 'อนุมัติ' : 'ปฏิเสธ';
         
         const isConfirmed = window.confirm(`คุณแน่ใจหรือไม่ที่จะ ${actionText} คำร้อง ID: ${requestId}?`);
 
@@ -42,14 +42,35 @@ function AdvisorRequestList() {
         setIsUpdating(true);
         try {
             await updateRequestStatus(requestId, newStatus);
-            // อัปเดตรายการคำร้องใหม่หลังการดำเนินการ
             await loadRequests(); 
             alert(`คำร้อง ID ${requestId} ถูก ${actionText} เรียบร้อยแล้ว`);
         } catch (err) {
             console.error("Status update failed:", err);
-            // ⭐️ แนะนำ: ดึง error message จาก 'response.data' (ถ้าใช้ axios)
             const errorMessage = err.response?.data?.detail || err.message || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์';
             alert(`ไม่สามารถ ${actionText} คำร้องได้: ${errorMessage}`);
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    // ⭐️ 2. เพิ่มฟังก์ชันสำหรับลบคำร้อง
+    const handleDelete = async (requestId) => {
+        const isConfirmed = window.confirm(`คุณแน่ใจหรือไม่ที่จะลบคำร้อง ID: ${requestId}? การกระทำนี้ไม่สามารถย้อนกลับได้`);
+
+        if (!isConfirmed) {
+            return;
+        }
+
+        setIsUpdating(true); // ใช้ state 'isUpdating' ร่วมกันเพื่อ disable ปุ่ม
+        try {
+            await deleteRequest(requestId);
+            // โหลดข้อมูลใหม่
+            await loadRequests(); 
+            alert(`คำร้อง ID ${requestId} ถูกลบเรียบร้อยแล้ว`);
+        } catch (err) {
+            console.error("Delete failed:", err);
+            const errorMessage = err.response?.data?.detail || err.message || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์';
+            alert(`ไม่สามารถลบคำร้องได้: ${errorMessage}`);
         } finally {
             setIsUpdating(false);
         }
@@ -62,7 +83,6 @@ function AdvisorRequestList() {
 
     if (loading) return <p>กำลังโหลดรายการคำร้อง...</p>;
     if (error) return <p style={{ color: 'red' }}>Error: {error}</p>;
-    // (การป้องกันที่บรรทัด 20 ทำให้ .length ปลอดภัยแล้ว)
     if (requests.length === 0) return <p>ไม่พบรายการคำร้องที่ต้องดำเนินการ</p>;
 
     return (
@@ -80,7 +100,6 @@ function AdvisorRequestList() {
                 <tbody>
                     {requests.map(req => (
                         <tr key={req.id}>
-                            {/* ⭐️ คลิก ID เพื่อดูรายละเอียด */}
                             <td 
                                 style={{ border: '1px solid #ddd', padding: '8px', cursor: 'pointer', color: 'blue', fontWeight: 'bold' }}
                                 onClick={() => handleRowClick(req.id)} 
@@ -88,7 +107,6 @@ function AdvisorRequestList() {
                                 {req.id}
                             </td>
                             
-                            {/* ⭐️⭐️⭐️ แก้ไข 2: ใช้ ?. ป้องกัน Crash ⭐️⭐️⭐️ */}
                             <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                                 {req.user?.first_name} {req.user?.last_name || '(ไม่มีข้อมูลผู้ใช้)'}
                             </td>
@@ -99,10 +117,12 @@ function AdvisorRequestList() {
                             <td style={{ border: '1px solid #ddd', padding: '8px', color: req.status === 'Pending Approval' ? 'orange' : (req.status === 'Rejected' ? 'red' : 'green') }}>
                                 {req.status}
                             </td>
+
+                            {/* ⭐️ 3. แก้ไขคอลัมน์ "จัดการ" */}
                             <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                                 {req.status === 'Pending Approval' ? (
                                     <>
-                                        {/* ใช้ e.stopPropagation() เพื่อป้องกันไม่ให้ onClick ของ <tr> ถูกเรียก */}
+                                        {/* ปุ่ม อนุมัติ */}
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); handleUpdateStatus(req.id, 'APPROVED'); }}
                                             style={{ 
@@ -118,6 +138,8 @@ function AdvisorRequestList() {
                                         >
                                             {isUpdating ? 'กำลัง...' : 'อนุมัติ'}
                                         </button>
+                                        
+                                        {/* ปุ่ม ปฏิเสธ */}
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); handleUpdateStatus(req.id, 'REJECTED'); }}
                                             style={{ 
@@ -134,8 +156,25 @@ function AdvisorRequestList() {
                                         </button>
                                     </>
                                 ) : (
-                                    <span onClick={() => handleRowClick(req.id)} style={{ cursor: 'pointer', color: 'blue' }}>ดูรายละเอียด</span>
+                                    <span onClick={() => handleRowClick(req.id)} style={{ cursor: 'pointer', color: 'blue', marginRight: '5px' }}>ดูรายละเอียด</span>
                                 )}
+                                
+                                {/* ปุ่ม "ลบ" (จะแสดงผลทุกสถานะ) */}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleDelete(req.id); }}
+                                    style={{ 
+                                        padding: '5px 10px', 
+                                        background: '#B22222', // สีแดงที่เข้มกว่า 'ปฏิเสธ'
+                                        color: 'white', 
+                                        border: 'none', 
+                                        cursor: 'pointer', 
+                                        borderRadius: '3px',
+                                        marginLeft: '5px' // เพิ่มระยะห่าง
+                                    }}
+                                    disabled={isUpdating}
+                                >
+                                    ลบ
+                                </button>
                             </td>
                         </tr>
                     ))}

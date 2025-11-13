@@ -4,12 +4,13 @@ import {
   fetchCategories,
   fetchRequestTypes,
   submitNewRequest,
+  uploadAttachment, // ⭐️ 1. Import `uploadAttachment` เข้ามา
 } from '../api/requests';
 
 function SubmitRequestPage() {
   const navigate = useNavigate();
 
-  // State (เหมือนเดิม)
+  // State
   const [categories, setCategories] = useState([]);
   const [requestTypes, setRequestTypes] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -19,12 +20,16 @@ function SubmitRequestPage() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
-  // Logic (เหมือนเดิม)
+  // ⭐️ 2. เพิ่ม State สำหรับไฟล์ และสถานะการส่ง
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Logic (โหลดหมวดหมู่)
   useEffect(() => {
     const loadInitialData = async () => {
       try {
         const cats = await fetchCategories();
-        setCategories(cats);
+        setCategories(cats || []);
       } catch (err) {
         console.error('Failed to load initial data:', err);
         setError('ไม่สามารถดึงข้อมูลหมวดหมู่ได้');
@@ -32,9 +37,10 @@ function SubmitRequestPage() {
         setLoading(false);
       }
     };
-    loadInitialData();
+    loadInitialData(); 
   }, []);
 
+  // Logic (ดึงประเภทคำร้อง)
   const handleCategoryChange = async (e) => {
     const categoryId = e.target.value;
     setSelectedCategory(categoryId);
@@ -44,7 +50,7 @@ function SubmitRequestPage() {
     if (categoryId) {
       try {
         const types = await fetchRequestTypes(categoryId);
-        setRequestTypes(types);
+        setRequestTypes(types || []);
       } catch (err) {
         console.error('Failed to load request types:', err);
         setError('ไม่สามารถดึงประเภทคำร้องได้');
@@ -52,24 +58,54 @@ function SubmitRequestPage() {
     }
   };
 
+  // ⭐️ 3. แก้ไข handleSubmit ให้เป็นแบบ 2-Step (ส่ง Text -> ส่ง File)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setSuccess(false);
+    setIsSubmitting(true); // ⭐️ เริ่มการส่ง
 
     if (!selectedRequestType || !details) {
       setError('กรุณาเลือกประเภทคำร้องและใส่รายละเอียดให้ครบถ้วน');
+      setIsSubmitting(false); // ⭐️ หยุด
       return;
     }
 
+    let newRequestId = null;
+
     try {
-      await submitNewRequest(selectedRequestType, details);
+      // --- ขั้นตอนที่ 1: ส่งข้อมูล Text (คำร้อง) ก่อน ---
+      const newRequest = await submitNewRequest(selectedRequestType, details);
+      newRequestId = newRequest.id; // ⭐️ เก็บ ID ของคำร้องที่เพิ่งสร้าง
+
+      // --- ขั้นตอนที่ 2: ถ้ามีไฟล์แนบ, ให้อัปโหลดตามไป ---
+      if (selectedFile && newRequestId) {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('request', newRequestId); // ⭐️ (สำคัญ) ต้องส่ง 'request' ID ไปใน FormData
+
+        // เรียก API อัปโหลดไฟล์ (ที่เราแก้ไขในขั้นตอนก่อน)
+        await uploadAttachment(newRequestId, formData);
+      }
+
+      // --- ขั้นตอนที่ 3: สำเร็จทั้งหมด ---
       setSuccess(true);
       setDetails('');
       setSelectedRequestType('');
       setSelectedCategory('');
+      setSelectedFile(null); // ⭐️ เคลียร์ไฟล์
+      if (document.getElementById('file-input')) {
+        document.getElementById('file-input').value = null; // ⭐️ เคลียร์ input
+      }
     } catch (err) {
       console.error('Submission failed:', err);
+      
+      // ⭐️ แจ้ง Error ให้ชัดเจนขึ้น
+      const errorAction = newRequestId
+        ? 'ยื่นคำร้องสำเร็จ แต่แนบไฟล์ไม่สำเร็จ' // (เคสที่ 1 สำเร็จ, เคสที่ 2 ล้มเหลว)
+        : 'ยื่นคำร้องไม่สำเร็จ'; // (เคสที่ 1 ล้มเหลว)
+
+      // (ดึง Error message จาก Backend)
       let specificErrorMessage = '';
       if (err && typeof err === 'object' && !Array.isArray(err)) {
         const errorKey = Object.keys(err)[0];
@@ -80,17 +116,18 @@ function SubmitRequestPage() {
         }
       }
       setError(
-        `ยื่นคำร้องไม่สำเร็จ: ${
+        `${errorAction}: ${
           specificErrorMessage || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์'
         }`
       );
+    } finally {
+      setIsSubmitting(false); // ⭐️ คืนค่าปุ่ม
     }
   };
 
-  // --- ⭐️ ส่วนแสดงผล (Render) ที่ปรับปรุงใหม่ ⭐️ ---
+  // --- ส่วนแสดงผล (Render) ---
 
   if (loading) {
-    // ⭐️ 1. แสดง Loading ภายใน Card ที่สวยงาม
     return (
       <div className="card" style={{ maxWidth: '700px' }}>
         <div
@@ -104,16 +141,12 @@ function SubmitRequestPage() {
   }
 
   return (
-    // ⭐️ 2. ใช้ .card เป็นกรอบหลัก (ขยายความกว้างเล็กน้อยสำหรับฟอร์ม)
     <div className="card" style={{ maxWidth: '700px' }}>
-      {/* ⭐️ 3. ใช้ .card-header สีฟ้าอ่อน */}
       <div className="card-header">
         <h1>ยื่นคำร้องใหม่</h1>
       </div>
 
-      {/* ⭐️ 4. ใช้ .card-body สำหรับเนื้อหาฟอร์ม */}
       <div className="card-body">
-        {/* ⭐️ 5. เปลี่ยน Success Message เป็น .alert .alert-success */}
         {success && (
           <div
             className="alert alert-success"
@@ -133,7 +166,6 @@ function SubmitRequestPage() {
           </div>
         )}
 
-        {/* ⭐️ 6. เปลี่ยน Error Message เป็น .alert .alert-danger */}
         {error && (
           <div className="alert alert-danger">
             <strong>Error:</strong> {error}
@@ -141,16 +173,17 @@ function SubmitRequestPage() {
         )}
 
         <form onSubmit={handleSubmit}>
-          {/* ⭐️ 7. ใช้ .form-group หุ้ม Label และ Input */}
+          {/* 1. หมวดหมู่หลัก */}
           <div className="form-group">
             <label htmlFor="category">หมวดหมู่หลัก:</label>
             <select
               id="category"
               value={selectedCategory}
               onChange={handleCategoryChange}
-              className="form-control" // ⭐️ 8. ใช้ .form-control
+              className="form-control"
               required
-              disabled={success}
+              // ⭐️ 4. ปิดการใช้งานปุ่มขณะส่ง
+              disabled={isSubmitting || success} 
             >
               <option value="">-- กรุณาเลือกหมวดหมู่ --</option>
               {categories.map((cat) => (
@@ -169,9 +202,9 @@ function SubmitRequestPage() {
                 id="request-type"
                 value={selectedRequestType}
                 onChange={(e) => setSelectedRequestType(e.target.value)}
-                className="form-control" // ⭐️ 8. ใช้ .form-control
+                className="form-control"
                 required
-                disabled={requestTypes.length === 0 || success}
+                disabled={requestTypes.length === 0 || isSubmitting || success}
               >
                 <option value="">-- กรุณาเลือกประเภทคำร้อง --</option>
                 {requestTypes.map((type) => (
@@ -199,21 +232,33 @@ function SubmitRequestPage() {
               value={details}
               onChange={(e) => setDetails(e.target.value)}
               rows="5"
-              className="form-control" // ⭐️ 8. ใช้ .form-control
+              className="form-control"
               required
-              disabled={success}
+              disabled={isSubmitting || success}
               placeholder="เช่น ขอถอนรายวิชา SOA101 เนื่องจาก..."
             />
           </div>
 
-          {/* ⭐️ 9. เปลี่ยนปุ่มเป็น .btn .btn-primary */}
+          {/* ⭐️ 5. เพิ่มช่องแนบไฟล์ */}
+          <div className="form-group">
+            <label htmlFor="file-input">แนบไฟล์ (ถ้ามี):</label>
+            <input
+              type="file"
+              id="file-input"
+              onChange={(e) => setSelectedFile(e.target.files[0])}
+              className="form-control"
+              disabled={isSubmitting || success}
+            />
+          </div>
+
+          {/* ⭐️ 6. เปลี่ยนปุ่ม Submit */}
           <button
             type="submit"
             className="btn btn-primary"
             style={{ marginTop: '10px' }}
-            disabled={success}
+            disabled={isSubmitting || success} // ⭐️ 7. อัปเดตเงื่อนไข disabled
           >
-            ส่งคำร้อง
+            {isSubmitting ? 'กำลังส่งคำร้อง...' : 'ส่งคำร้อง'}
           </button>
         </form>
       </div>

@@ -1,85 +1,146 @@
-import React from 'react';
+// src/pages/AdvisorDashboard.jsx
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fetchAllRequests } from '../api/requests'; // ⭐️ (สำคัญ) Import API ที่ดึงคำร้อง "ทั้งหมด"
 import useAuthStore from '../stores/authStore';
-import AdvisorRequestList from '../components/AdvisorRequestList'; 
 
 function AdvisorDashboard() {
-    const user = useAuthStore((state) => state.user);
-    const logout = useAuthStore((state) => state.logout);
-    const navigate = useNavigate();
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
 
-    const handleLogout = () => {
-        logout(); 
-        navigate('/login'); 
-    };
+  // ⭐️ 1. เพิ่ม State สำหรับ Filter (เหมือนหน้า Student)
+  const [filterStatus, setFilterStatus] = useState('All');
 
-    // ⭐️ แก้ไข (1): เพิ่มการตรวจสอบ loadingUser จาก store
-    //เผื่อว่า user ยังเป็น null แต่กำลังโหลดอยู่
-    const loadingUser = useAuthStore((state) => state.loadingUser);
-    
-    if (!user && loadingUser) {
-        return <div style={{ padding: '20px' }}>กำลังโหลดข้อมูลผู้ใช้...</div>;
+  // โหลดข้อมูลคำร้อง "ทั้งหมด"
+  const loadAllRequests = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchAllRequests(); // 👈 API นี้จะดึงของ "ทุกคน"
+      setRequests(data || []);
+    } catch (err) {
+      console.error('Error fetching all requests:', err);
+      setError('ไม่สามารถดึงข้อมูลคำร้องทั้งหมดได้');
+    } finally {
+      setLoading(false);
     }
-    
-    // ⭐️ แก้ไข (2): ถ้าโหลดจบแล้ว แต่ user ยังคงเป็น null (เช่น token หมดอายุ)
-    // ให้แสดง Error หรือเด้งไปหน้า login (ในที่นี้แสดง Error)
-    if (!user) {
-        return (
-          <div style={{ padding: '20px', color: 'red' }}>
-             ไม่พบข้อมูลผู้ใช้ (Session อาจหมดอายุ) 
-             <button onClick={() => window.location.href = '/login'}>
-               กลับไปหน้า Login
-             </button>
-          </div>
-        );
+  };
+
+  useEffect(() => {
+    loadAllRequests();
+  }, []);
+
+  // (ฟังก์ชันสำหรับแปลง Status เป็นสี)
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case 'Approved':
+        return { backgroundColor: '#d4edda', color: '#155724', padding: '3px 8px', borderRadius: '4px' };
+      case 'Rejected':
+        return { backgroundColor: '#f8d7da', color: '#721c24', padding: '3px 8px', borderRadius: '4px' };
+      case 'Pending Approval':
+        return { backgroundColor: '#fff3cd', color: '#856404', padding: '3px 8px', borderRadius: '4px' };
+      case 'In Progress':
+        return { backgroundColor: '#cce5ff', color: '#004085', padding: '3px 8px', borderRadius: '4px' };
+      default:
+        return { backgroundColor: '#e9ecef', color: '#212529', padding: '3px 8px', borderRadius: '4px' };
     }
+  };
 
-    return (
-        <div style={{ padding: '20px' }}>
-            <h1>Dashboard อาจารย์ที่ปรึกษา/เจ้าหน้าที่</h1>
-            
-            <div style={{ 
-                border: '1px solid #0056b3', 
-                padding: '15px', 
-                background: '#e0f7ff', 
-                borderRadius: '5px', 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center' 
-            }}>
-                <div>
-                    {/* ⭐️⭐️⭐️ แก้ไข 3: ใช้ ?. เพื่อความปลอดภัย ⭐️⭐️⭐️ */}
-                    <p style={{ margin: '0' }}>
-                      <strong>ยินดีต้อนรับ, {user?.first_name || ''} {user?.last_name || '(ผู้ใช้)'}</strong>
-                    </p>
-                    <p style={{ margin: '5px 0 0 0' }}>
-                      <strong>Role:</strong> {user.profile?.role}
-                    </p>
-                </div>
-                <button 
-                    onClick={handleLogout} 
-                    style={{ 
-                        background: '#0056b3', 
-                        color: 'white', 
-                        border: 'none', 
-                        padding: '10px 15px', 
-                        borderRadius: '5px', 
-                        cursor: 'pointer' 
-                    }}
-                >
-                    ออกจากระบบ
-                </button>
-            </div>
+  // ⭐️ 2. กรองข้อมูล (เหมือนหน้า Student)
+  const filteredRequests = requests.filter(req => {
+    if (filterStatus === 'All') {
+      return true;
+    }
+    return req.status === filterStatus;
+  });
 
-            <hr style={{ margin: '30px 0' }} />
+  if (loading) return <p>กำลังโหลดรายการคำร้องทั้งหมด...</p>;
+  if (error) return <div className="alert alert-danger">{error}</div>;
 
-            <h2>รายการคำร้องทั้งหมดที่ต้องดำเนินการ</h2>
-            
-            {/* ปัญหาหน้าขาว อยู่ใน Component นี้ (ไฟล์ AdvisorRequestList.jsx) */}
-            <AdvisorRequestList />
-            
+  return (
+    <div className="card" style={{ maxWidth: '1000px', margin: '0 auto' }}>
+      <div className="card-header">
+        <h3>จัดการคำร้อง (สำหรับ {user?.profile?.role})</h3>
+      </div>
+      <div className="card-body">
+
+        {/* ⭐️ 3. เพิ่ม Dropdown สำหรับ Filter */}
+        <div className="form-group" style={{ maxWidth: '250px', marginBottom: '1.5rem' }}>
+          <label htmlFor="statusFilter">กรองตามสถานะ:</label>
+          <select
+            id="statusFilter"
+            className="form-control"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="All">ทั้งหมด</option>
+            <option value="Pending Approval">รออนุมัติ</option>
+            <option value="In Progress">กำลังดำเนินการ</option>
+            <option value="Approved">อนุมัติแล้ว</option>
+            <option value="Rejected">ปฏิเสธแล้ว</option>
+          </select>
         </div>
-    );
+
+        <table className="table table-hover table-bordered">
+          <thead className="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>ผู้ยื่น (Student)</th>
+              <th>ประเภทคำร้อง</th>
+              <th>สถานะ</th>
+              <th>วันที่ยื่น</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* ⭐️ 4. ใช้ filteredRequests มา .map() */}
+            {filteredRequests.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="text-center text-muted" style={{ padding: '20px' }}>
+                  ไม่พบคำร้องในระบบ (ตามตัวกรองที่เลือก)
+                </td>
+              </tr>
+            ) : (
+              filteredRequests.map((req) => (
+                <tr 
+                  key={req.id} 
+                  onClick={() => navigate(`/requests/${req.id}`)} 
+                  style={{ cursor: 'pointer' }}
+                >
+                  <td>#{req.id}</td>
+                  <td>
+                    {req.user?.first_name} {req.user?.last_name}
+                  </td>
+                  <td>{req.request_type?.name || 'N/A'}</td>
+                  <td>
+                    <span style={getStatusStyle(req.status)}>
+                      {req.status}
+                    </span>
+                  </td>
+                  <td>{new Date(req.created_at).toLocaleDateString('th-TH')}</td>
+                  <td>
+                    <button
+                      className="btn btn-info btn-sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/requests/${req.id}`);
+                      }}
+                    >
+                      จัดการ
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
 
 export default AdvisorDashboard;

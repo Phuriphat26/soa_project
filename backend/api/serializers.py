@@ -16,7 +16,9 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class RequestTypeSerializer(serializers.ModelSerializer):
-    category = serializers.StringRelatedField()
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all()
+    )
     class Meta:
         model = RequestType
         fields = ['id', 'name', 'description', 'category']
@@ -38,9 +40,16 @@ class RequestHistorySerializer(serializers.ModelSerializer):
 
 class AttachmentSerializer(serializers.ModelSerializer):
     file_name = serializers.CharField(source='file.name', read_only=True)
+    
+    # ⭐️ [แก้ไข 3/3] เพิ่ม Field 'request'
+    #    (ตั้งค่าเป็น Write-Only เพื่อให้รับค่า ID ตอน 'POST' ได้)
+    request = serializers.PrimaryKeyRelatedField(
+        queryset=Request.objects.all(), write_only=True
+    )
+
     class Meta:
         model = Attachment
-        fields = ['id', 'file', 'file_name', 'uploaded_at']
+        fields = ['id', 'file', 'file_name', 'uploaded_at', 'request'] # ✅ เพิ่ม 'request'
 
 
 class NotificationSerializer(serializers.ModelSerializer):
@@ -159,7 +168,11 @@ class RequestCreateSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model = Request
-        fields = ['request_type_id', 'details']
+        fields = ['id', 'request_type_id', 'details']
+        
+        # ⭐️ 2. บอกว่า 'id' เป็นแบบอ่านอย่างเดียว (Read-Only)
+        #    (เพราะ 'id' ถูกสร้างโดยฐานข้อมูล)
+        read_only_fields = ['id']
 
 
 class RequestDetailSerializer(serializers.ModelSerializer):

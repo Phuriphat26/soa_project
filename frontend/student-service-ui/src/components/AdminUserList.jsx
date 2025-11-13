@@ -14,7 +14,7 @@ function AdminUserList() {
         setError(null);
         try {
             const data = await fetchAllUsers();
-            setUsers(data);
+            setUsers(data || []);
         } catch (err) {
             console.error("Failed to fetch users:", err);
             setError("ไม่สามารถดึงรายการผู้ใช้ทั้งหมดได้ (โปรดตรวจสอบ Backend/สิทธิ์ Admin)");
