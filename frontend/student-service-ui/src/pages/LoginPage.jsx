@@ -28,16 +28,14 @@ function LoginPage() {
     setLoading(true);
 
     try {
-      // ⭐️ loginUser ตอนนี้ return { access, refresh, user }
+
       const response = await loginUser(username, password);
       
       console.log('✅ Login success:', response);
-      
-      // ⭐️ Set token ก่อน
-      // ✅ เหลือแค่นี้
+     
       await setUser(response);
       
-      // ⭐️ Set user data
+
       if (response.user) {
         await setUser(response.user);
       }

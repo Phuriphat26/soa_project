@@ -30,4 +30,3 @@ class IsFinanceStaff(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.profile.role == Profile.Role.STAFF_FINANCE
 
-# (เราสามารถเพิ่ม IsAdmin, IsRegistrarStaff ได้ตามต้องการ)

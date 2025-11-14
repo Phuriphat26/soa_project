@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import useAuthStore from '../stores/authStore.js';
 import axiosClient from '../api/axiosClient.js';
 
-/**
- * Component สำหรับหน้าแก้ไขข้อมูลส่วนตัว (Update Profile Page)
- * อนุญาตให้ผู้ใช้แก้ไข ชื่อ, นามสกุล, และอีเมล
- */
+
 function UpdateProfilePage() {
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
@@ -18,7 +15,7 @@ function UpdateProfilePage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  // 1. โหลดข้อมูลผู้ใช้ปัจจุบันลงในฟอร์ม (เหมือนเดิม)
+
   useEffect(() => {
     if (user) {
       setFormData({
@@ -29,7 +26,7 @@ function UpdateProfilePage() {
     }
   }, [user]);
 
-  // การจัดการการเปลี่ยนแปลงของฟอร์ม (เหมือนเดิม)
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -39,7 +36,7 @@ function UpdateProfilePage() {
     setErrorMessage('');
   };
 
-  // การส่งฟอร์มเพื่อแก้ไขข้อมูล (เหมือนเดิม)
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -47,14 +44,14 @@ function UpdateProfilePage() {
     setErrorMessage('');
 
     try {
-      // API Call: PATCH /users/me/
+ 
       const response = await axiosClient.patch(`/users/me/`, {
         first_name: formData.first_name,
         last_name: formData.last_name,
         email: formData.email,
       });
 
-      // 2. อัพเดทข้อมูลผู้ใช้ใน Global Store
+    
       setUser({
         ...user,
         ...response.data,
@@ -73,7 +70,7 @@ function UpdateProfilePage() {
     }
   };
 
-  // --- ⭐️ ส่วนแสดงผล (Render) ที่ปรับปรุงใหม่ ⭐️ ---
+
 
   if (!user) {
     return (
@@ -88,17 +85,17 @@ function UpdateProfilePage() {
   }
 
   return (
-    // ⭐️ 1. ใช้ .card เป็นกรอบหลัก
+  
     <div className="card" style={{ maxWidth: '600px' }}>
-      {/* ⭐️ 2. ใช้ .card-header สีฟ้าอ่อน */}
+      
       <div className="card-header">
         <h1>แก้ไขข้อมูลส่วนตัว</h1>
       </div>
 
-      {/* ⭐️ 3. ใช้ .card-body สำหรับเนื้อหาฟอร์ม */}
+  
       <div className="card-body">
         <form onSubmit={handleSubmit}>
-          {/* ⭐️ 4. ใช้ .form-group */}
+         
           <div className="form-group">
             <label>ชื่อผู้ใช้ (Username):</label>
             <p style={{ margin: '5px 0', fontWeight: 'bold' }}>
@@ -116,7 +113,7 @@ function UpdateProfilePage() {
               value={formData.first_name}
               onChange={handleChange}
               required
-              className="form-control" // ⭐️ 5. ใช้ .form-control
+              className="form-control" 
             />
           </div>
 
@@ -129,7 +126,7 @@ function UpdateProfilePage() {
               value={formData.last_name}
               onChange={handleChange}
               required
-              className="form-control" // ⭐️ 5. ใช้ .form-control
+              className="form-control" 
             />
           </div>
 
@@ -142,20 +139,20 @@ function UpdateProfilePage() {
               value={formData.email}
               onChange={handleChange}
               required
-              className="form-control" // ⭐️ 5. ใช้ .form-control
+              className="form-control" 
             />
           </div>
 
-          {/* ⭐️ 6. ใช้ .alert .alert-success */}
+      
           {successMessage && (
             <div className="alert alert-success">{successMessage}</div>
           )}
-          {/* ⭐️ 6. ใช้ .alert .alert-danger */}
+        
           {errorMessage && (
             <div className="alert alert-danger">{errorMessage}</div>
           )}
 
-          {/* ⭐️ 7. ใช้ .btn .btn-success (สีเขียว=บันทึก) .btn-block */}
+          
           <button
             type="submit"
             disabled={loading}
@@ -181,12 +178,6 @@ function UpdateProfilePage() {
   );
 }
 
-// ⭐️ 8. ลบ Inline Styles ทั้งหมด (เพราะย้ายไปใน index.css แล้ว)
-// const formGroupStyle = { ... };
-// const formLabelStyle = { ... };
-// const inputStyle = { ... };
-// const buttonStyle = (loading) => ({ ... });
-// const successMessageStyle = { ... };
-// const errorMessageStyle = { ... };
+
 
 export default UpdateProfilePage;

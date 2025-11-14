@@ -21,7 +21,7 @@ function RequestDetailPage() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  // ⭐️ 1. เพิ่ม State สำหรับแสดงข้อความ Success/Error (แทน alert)
+
   const [actionSuccess, setActionSuccess] = useState(null);
   const [actionError, setActionError] = useState(null);
 
@@ -29,13 +29,13 @@ function RequestDetailPage() {
     userRole === 'Advisor' ||
     userRole === 'Staff (Registrar)' ||
     userRole === 'Staff (Finance)' ||
-    userRole === 'Admin' || // ⭐️ เพิ่ม Admin ให้จัดการได้ด้วย
-    userRole === 'Staff'; // ⭐️ เพิ่ม Staff (ทั่วไป)
+    userRole === 'Admin' || 
+    userRole === 'Staff'; 
 
   const canUploadFile =
     userRole === 'Student' && request?.status === 'Pending Approval';
 
-  // --- Logic (เหมือนเดิม) ---
+
   const loadRequest = useCallback(async () => {
     setLoading(true);
     try {
@@ -54,7 +54,7 @@ function RequestDetailPage() {
     loadRequest();
   }, [loadRequest]);
 
-  // --- ⭐️ (ปรับปรุง) Logic การอัปเดตสถานะ (ลบ confirm/alert) ---
+
   const handleUpdateStatus = async (newStatus) => {
     const statusMap = {
       APPROVED: 'อนุมัติ',
@@ -63,41 +63,40 @@ function RequestDetailPage() {
     };
     const actionText = statusMap[newStatus] || 'อัปเดต';
 
-    // ⭐️ (ลบ) const isConfirmed = window.confirm(...);
+  
 
-    // ⭐️ 2. ล้างข้อความแจ้งเตือนเก่า
     setActionSuccess(null);
     setActionError(null);
     setIsUpdating(true);
 
     try {
       await updateRequestStatus(requestId, newStatus);
-      await loadRequest(); // โหลดข้อมูลใหม่
-      // ⭐️ 3. แสดงข้อความ Success
+      await loadRequest(); 
+
       setActionSuccess(`คำร้อง ID ${requestId} ถูก ${actionText} เรียบร้อยแล้ว`);
     } catch (err) {
       console.error('Failed to update status:', err);
       const errorMsg =
         err.detail || JSON.stringify(err) || 'เกิดข้อผิดพลาด';
-      // ⭐️ 3. แสดงข้อความ Error
+
       setActionError(`ไม่สามารถ ${actionText} คำร้องได้: ${errorMsg}`);
     } finally {
       setIsUpdating(false);
     }
   };
 
-  // --- ⭐️ (ปรับปรุง) Logic การอัปโหลดไฟล์ (ลบ alert) ---
+
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
   };
 
   const handleFileUpload = async () => {
-    // ⭐️ 2. ล้างข้อความแจ้งเตือนเก่า
+
     setActionSuccess(null);
     setActionError(null);
 
     if (!selectedFile) {
-      // ⭐️ 3. แสดงข้อความ Error
+  
       setActionError('กรุณาเลือกไฟล์ก่อนอัปโหลด');
       return;
     }
@@ -109,7 +108,7 @@ function RequestDetailPage() {
       formData.append('request', requestId);
       await uploadAttachment(requestId, formData);
 
-      // ⭐️ 3. แสดงข้อความ Success
+
       setActionSuccess('อัปโหลดไฟล์สำเร็จ!');
       setSelectedFile(null);
       if (document.getElementById('file-input')) {
@@ -120,14 +119,14 @@ function RequestDetailPage() {
       console.error('Failed to upload file:', err);
       const errorMsg =
         err.detail || JSON.stringify(err) || 'เกิดข้อผิดพลาด';
-      // ⭐️ 3. แสดงข้อความ Error
+  
       setActionError(`อัปโหลดไฟล์ไม่สำเร็จ: ${errorMsg}`);
     } finally {
       setIsUploading(false);
     }
   };
 
-  // --- ⭐️ (คงไว้) Logic การแสดงสีสถานะ ---
+
   const getStatusStyle = (status) => {
     switch (status) {
       case 'Approved':
@@ -168,7 +167,7 @@ function RequestDetailPage() {
     }
   };
 
-  // --- ⭐️ (ปรับปรุง) Render Loading/Error ---
+
   if (loading) {
     return (
       <div className="card" style={{ maxWidth: '700px' }}>
@@ -201,32 +200,32 @@ function RequestDetailPage() {
     );
   }
 
-  // --- ⭐️ (ปรับปรุง) Render หน้าหลัก ---
+
   return (
-    // ⭐️ 4. ใช้ .card เป็นกรอบหลัก
+
     <div className="card" style={{ maxWidth: '900px' }}>
-      {/* ⭐️ 5. ใช้ .card-header */}
+
       <div className="card-header">
         <h1>รายละเอียดคำร้อง: ID #{request.id}</h1>
       </div>
 
-      {/* ⭐️ 6. ใช้ .card-body */}
+
       <div className="card-body">
         <button
           onClick={() => navigate(-1)}
-          className="btn btn-secondary mb-4" // ⭐️ ใช้ .btn
+          className="btn btn-secondary mb-4" 
         >
           ← กลับ
         </button>
 
-        {/* ⭐️ 7. แสดงข้อความแจ้งเตือน (แทน alert) */}
+
         {actionSuccess && (
           <div className="alert alert-success">{actionSuccess}</div>
         )}
         {actionError && <div className="alert alert-danger">{actionError}</div>}
 
-        {/* ⭐️ 8. (ปรับปรุง) แยกข้อมูลเป็น Card ย่อยๆ */}
-        {/* ข้อมูลหลัก */}
+
+
         <div className="card mb-4">
           <div className="card-header">
             <h3>ข้อมูลหลัก</h3>
@@ -257,7 +256,7 @@ function RequestDetailPage() {
           </div>
         </div>
 
-        {/* รายละเอียด */}
+
         <div className="card mb-4">
           <div className="card-header">
             <h3>รายละเอียดที่ผู้ยื่นระบุ</h3>
@@ -270,7 +269,7 @@ function RequestDetailPage() {
           </div>
         </div>
 
-        {/* ประวัติการดำเนินการ */}
+
         <div className="card mb-4">
           <div className="card-header">
             <h3>ประวัติการดำเนินการ (History)</h3>
@@ -294,7 +293,7 @@ function RequestDetailPage() {
           </div>
         </div>
 
-        {/* ไฟล์แนบ */}
+
         <div className="card mb-4">
           <div className="card-header">
             <h3>ไฟล์แนบ</h3>
@@ -332,7 +331,7 @@ function RequestDetailPage() {
           </div>
         </div>
 
-        {/* อัปโหลดไฟล์ (Student) */}
+
         {canUploadFile && (
           <div className="card mb-4">
             <div className="card-header" style={{backgroundColor: '#e7f3ff'}}>
@@ -344,14 +343,14 @@ function RequestDetailPage() {
                   id="file-input"
                   type="file"
                   onChange={handleFileChange}
-                  className="form-control" // ⭐️ ใช้ .form-control
+                  className="form-control" 
                   disabled={isUploading}
                 />
               </div>
               <button
                 onClick={handleFileUpload}
                 disabled={!selectedFile || isUploading}
-                className="btn btn-primary" // ⭐️ ใช้ .btn
+                className="btn btn-primary" 
               >
                 {isUploading ? 'กำลังอัปโหลด...' : 'อัปโหลดไฟล์'}
               </button>
@@ -367,7 +366,7 @@ function RequestDetailPage() {
           </div>
         )}
 
-        {/* จัดการคำร้อง (Advisor/Staff) */}
+
         {canUpdateStatus &&  (
           <div className="card mb-4">
             <div className="card-header" style={{backgroundColor: '#fff3e0'}}>
@@ -380,21 +379,21 @@ function RequestDetailPage() {
               <button
                 onClick={() => handleUpdateStatus('APPROVED')}
                 disabled={isUploading || isUpdating}
-                className="btn btn-success" // ⭐️ ใช้ .btn
+                className="btn btn-success" 
               >
                 {isUpdating ? 'กำลังอนุมัติ...' : '✅ อนุมัติ'}
               </button>
               <button
                 onClick={() => handleUpdateStatus('IN_PROGRESS')}
                 disabled={isUploading || isUpdating}
-                className="btn btn-primary" // ⭐️ ใช้ .btn
+                className="btn btn-primary" 
               >
                 {isUpdating ? 'กำลังอัปเดต...' : '🔄 กำลังดำเนินการ'}
               </button>
               <button
                 onClick={() => handleUpdateStatus('REJECTED')}
                 disabled={isUploading || isUpdating}
-                className="btn btn-danger" // ⭐️ ใช้ .btn
+                className="btn btn-danger" 
               >
                 {isUpdating ? 'กำลังปฏิเสธ...' : '❌ ปฏิเสธ'}
               </button>
@@ -402,7 +401,6 @@ function RequestDetailPage() {
           </div>
         )}
 
-        {/* (ดำเนินการแล้ว) */}
         {canUpdateStatus && request.status !== 'Pending Approval' && (
           <div className="alert alert-info text-center">
             <p style={{ margin: 0 }}>

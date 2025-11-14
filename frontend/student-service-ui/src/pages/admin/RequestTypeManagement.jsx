@@ -9,7 +9,7 @@ import {
 } from '../../api/requests';
 
 function RequestTypeManagement() {
-  // State & Hook
+
   const { categoryId } = useParams();
 
   const [category, setCategory] = useState(null);
@@ -22,18 +22,18 @@ function RequestTypeManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // โหลดข้อมูล Category และ RequestType
+
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // ดึงข้อมูล Category ทั้งหมด
+
       const allCategories = await fetchCategories();
       const currentCategory = allCategories.find(c => c.id.toString() === categoryId);
       setCategory(currentCategory || { name: 'ไม่พบหมวดหมู่' });
 
-      // ดึง Request Type ทั้งหมดในหมวดนี้
+  
       const data = await fetchRequestTypes(categoryId);
       const types = Array.isArray(data) ? data : (data?.results || []);
       types.sort((a, b) => a.name.localeCompare(b.name));
@@ -51,7 +51,7 @@ function RequestTypeManagement() {
     loadData();
   }, [loadData]);
 
-  // เพิ่มประเภทคำร้อง
+
   const handleAddType = async (e) => {
     e.preventDefault();
     if (!newTypeName.trim()) {
@@ -62,7 +62,7 @@ function RequestTypeManagement() {
     try {
       setError(null);
       
-      // ⭐️ [แก้ไข] ส่งเป็น Object ที่มี name และ category ID
+ 
       await addRequestType({
         name: newTypeName,
         category: parseInt(categoryId, 10)
@@ -77,7 +77,7 @@ function RequestTypeManagement() {
     }
   };
 
-  // ลบประเภทคำร้อง
+
   const handleDeleteType = async (typeId) => {
     if (!window.confirm('คุณแน่ใจหรือไม่ว่าต้องการลบประเภทคำร้องนี้?')) return;
     try {
@@ -89,7 +89,7 @@ function RequestTypeManagement() {
     }
   };
 
-  // แก้ไขประเภทคำร้อง
+
   const handleEditClick = (type) => {
     setEditingTypeId(type.id);
     setEditingTypeName(type.name);
@@ -108,7 +108,7 @@ function RequestTypeManagement() {
 
     try {
       
-      // ⭐️ [แก้ไข] ส่ง ID แยก และส่งข้อมูล (name) เป็น Object
+ 
       await updateRequestType(editingTypeId, { name: editingTypeName });
 
       setEditingTypeId(null);
@@ -121,7 +121,7 @@ function RequestTypeManagement() {
     }
   };
 
-  // แสดงผล
+
   return (
     <div className="card" style={{ maxWidth: '800px', margin: '0 auto' }}>
       <div className="card-header">
@@ -134,7 +134,7 @@ function RequestTypeManagement() {
           ← กลับไปหน้าหมวดหมู่หลัก
         </Link>
 
-        {/* ฟอร์มเพิ่มประเภทคำร้อง */}
+   
         <form onSubmit={handleAddType} style={{ marginBottom: '1.5rem' }}>
           <div className="form-group">
             <label htmlFor="newTypeName">เพิ่มประเภทคำร้องใหม่:</label>

@@ -4,7 +4,7 @@ import {
   fetchCategories,
   fetchRequestTypes,
   submitNewRequest,
-  uploadAttachment, // ⭐️ 1. Import `uploadAttachment` เข้ามา
+  uploadAttachment, 
 } from '../api/requests';
 
 function SubmitRequestPage() {
@@ -20,11 +20,11 @@ function SubmitRequestPage() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
-  // ⭐️ 2. เพิ่ม State สำหรับไฟล์ และสถานะการส่ง
+  
   const [selectedFile, setSelectedFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Logic (โหลดหมวดหมู่)
+
   useEffect(() => {
     const loadInitialData = async () => {
       try {
@@ -40,7 +40,7 @@ function SubmitRequestPage() {
     loadInitialData(); 
   }, []);
 
-  // Logic (ดึงประเภทคำร้อง)
+
   const handleCategoryChange = async (e) => {
     const categoryId = e.target.value;
     setSelectedCategory(categoryId);
@@ -58,54 +58,54 @@ function SubmitRequestPage() {
     }
   };
 
-  // ⭐️ 3. แก้ไข handleSubmit ให้เป็นแบบ 2-Step (ส่ง Text -> ส่ง File)
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setSuccess(false);
-    setIsSubmitting(true); // ⭐️ เริ่มการส่ง
+    setIsSubmitting(true); 
 
     if (!selectedRequestType || !details) {
       setError('กรุณาเลือกประเภทคำร้องและใส่รายละเอียดให้ครบถ้วน');
-      setIsSubmitting(false); // ⭐️ หยุด
+      setIsSubmitting(false); 
       return;
     }
 
     let newRequestId = null;
 
     try {
-      // --- ขั้นตอนที่ 1: ส่งข้อมูล Text (คำร้อง) ก่อน ---
-      const newRequest = await submitNewRequest(selectedRequestType, details);
-      newRequestId = newRequest.id; // ⭐️ เก็บ ID ของคำร้องที่เพิ่งสร้าง
 
-      // --- ขั้นตอนที่ 2: ถ้ามีไฟล์แนบ, ให้อัปโหลดตามไป ---
+      const newRequest = await submitNewRequest(selectedRequestType, details);
+      newRequestId = newRequest.id; 
+
+
       if (selectedFile && newRequestId) {
         const formData = new FormData();
         formData.append('file', selectedFile);
-        formData.append('request', newRequestId); // ⭐️ (สำคัญ) ต้องส่ง 'request' ID ไปใน FormData
+        formData.append('request', newRequestId); 
 
-        // เรียก API อัปโหลดไฟล์ (ที่เราแก้ไขในขั้นตอนก่อน)
+
         await uploadAttachment(newRequestId, formData);
       }
 
-      // --- ขั้นตอนที่ 3: สำเร็จทั้งหมด ---
+
       setSuccess(true);
       setDetails('');
       setSelectedRequestType('');
       setSelectedCategory('');
-      setSelectedFile(null); // ⭐️ เคลียร์ไฟล์
+      setSelectedFile(null); 
       if (document.getElementById('file-input')) {
-        document.getElementById('file-input').value = null; // ⭐️ เคลียร์ input
+        document.getElementById('file-input').value = null; 
       }
     } catch (err) {
       console.error('Submission failed:', err);
       
-      // ⭐️ แจ้ง Error ให้ชัดเจนขึ้น
+      
       const errorAction = newRequestId
-        ? 'ยื่นคำร้องสำเร็จ แต่แนบไฟล์ไม่สำเร็จ' // (เคสที่ 1 สำเร็จ, เคสที่ 2 ล้มเหลว)
-        : 'ยื่นคำร้องไม่สำเร็จ'; // (เคสที่ 1 ล้มเหลว)
+        ? 'ยื่นคำร้องสำเร็จ แต่แนบไฟล์ไม่สำเร็จ' 
+        : 'ยื่นคำร้องไม่สำเร็จ'; 
 
-      // (ดึง Error message จาก Backend)
+
       let specificErrorMessage = '';
       if (err && typeof err === 'object' && !Array.isArray(err)) {
         const errorKey = Object.keys(err)[0];
@@ -121,11 +121,11 @@ function SubmitRequestPage() {
         }`
       );
     } finally {
-      setIsSubmitting(false); // ⭐️ คืนค่าปุ่ม
+      setIsSubmitting(false); 
     }
   };
 
-  // --- ส่วนแสดงผล (Render) ---
+
 
   if (loading) {
     return (
@@ -173,7 +173,7 @@ function SubmitRequestPage() {
         )}
 
         <form onSubmit={handleSubmit}>
-          {/* 1. หมวดหมู่หลัก */}
+     
           <div className="form-group">
             <label htmlFor="category">หมวดหมู่หลัก:</label>
             <select
@@ -182,7 +182,7 @@ function SubmitRequestPage() {
               onChange={handleCategoryChange}
               className="form-control"
               required
-              // ⭐️ 4. ปิดการใช้งานปุ่มขณะส่ง
+          
               disabled={isSubmitting || success} 
             >
               <option value="">-- กรุณาเลือกหมวดหมู่ --</option>
@@ -194,7 +194,7 @@ function SubmitRequestPage() {
             </select>
           </div>
 
-          {/* 2. เลือกประเภทคำร้อง */}
+    
           {selectedCategory && (
             <div className="form-group">
               <label htmlFor="request-type">ประเภทคำร้อง (ฟอร์ม):</label>
@@ -224,7 +224,7 @@ function SubmitRequestPage() {
             </div>
           )}
 
-          {/* 3. รายละเอียดคำร้อง */}
+
           <div className="form-group">
             <label htmlFor="details">รายละเอียดเพิ่มเติม:</label>
             <textarea
@@ -239,7 +239,7 @@ function SubmitRequestPage() {
             />
           </div>
 
-          {/* ⭐️ 5. เพิ่มช่องแนบไฟล์ */}
+  
           <div className="form-group">
             <label htmlFor="file-input">แนบไฟล์ (ถ้ามี):</label>
             <input
@@ -251,12 +251,12 @@ function SubmitRequestPage() {
             />
           </div>
 
-          {/* ⭐️ 6. เปลี่ยนปุ่ม Submit */}
+     
           <button
             type="submit"
             className="btn btn-primary"
             style={{ marginTop: '10px' }}
-            disabled={isSubmitting || success} // ⭐️ 7. อัปเดตเงื่อนไข disabled
+            disabled={isSubmitting || success} 
           >
             {isSubmitting ? 'กำลังส่งคำร้อง...' : 'ส่งคำร้อง'}
           </button>

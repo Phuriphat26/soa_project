@@ -1,8 +1,8 @@
-// src/pages/AdvisorDashboard.jsx
+
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchAllRequests } from '../api/requests'; // ⭐️ (สำคัญ) Import API ที่ดึงคำร้อง "ทั้งหมด"
+import { fetchAllRequests } from '../api/requests'; 
 import useAuthStore from '../stores/authStore';
 
 function AdvisorDashboard() {
@@ -12,15 +12,15 @@ function AdvisorDashboard() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
 
-  // ⭐️ 1. เพิ่ม State สำหรับ Filter (เหมือนหน้า Student)
+
   const [filterStatus, setFilterStatus] = useState('All');
 
-  // โหลดข้อมูลคำร้อง "ทั้งหมด"
+
   const loadAllRequests = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchAllRequests(); // 👈 API นี้จะดึงของ "ทุกคน"
+      const data = await fetchAllRequests(); 
       setRequests(data || []);
     } catch (err) {
       console.error('Error fetching all requests:', err);
@@ -34,7 +34,7 @@ function AdvisorDashboard() {
     loadAllRequests();
   }, []);
 
-  // (ฟังก์ชันสำหรับแปลง Status เป็นสี)
+
   const getStatusStyle = (status) => {
     switch (status) {
       case 'Approved':
@@ -50,7 +50,7 @@ function AdvisorDashboard() {
     }
   };
 
-  // ⭐️ 2. กรองข้อมูล (เหมือนหน้า Student)
+
   const filteredRequests = requests.filter(req => {
     if (filterStatus === 'All') {
       return true;
@@ -68,7 +68,7 @@ function AdvisorDashboard() {
       </div>
       <div className="card-body">
 
-        {/* ⭐️ 3. เพิ่ม Dropdown สำหรับ Filter */}
+    
         <div className="form-group" style={{ maxWidth: '250px', marginBottom: '1.5rem' }}>
           <label htmlFor="statusFilter">กรองตามสถานะ:</label>
           <select
@@ -97,7 +97,7 @@ function AdvisorDashboard() {
             </tr>
           </thead>
           <tbody>
-            {/* ⭐️ 4. ใช้ filteredRequests มา .map() */}
+   
             {filteredRequests.length === 0 ? (
               <tr>
                 <td colSpan="6" className="text-center text-muted" style={{ padding: '20px' }}>

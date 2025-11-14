@@ -10,7 +10,7 @@ function AdvisorRequestList() {
     const [isUpdating, setIsUpdating] = useState(false); 
     const navigate = useNavigate(); 
 
-    // ฟังก์ชันดึงข้อมูลหลัก
+  
     const loadRequests = async () => {
         setLoading(true);
         setError(null);
@@ -29,7 +29,7 @@ function AdvisorRequestList() {
         loadRequests();
     }, []);
     
-    // ฟังก์ชันสำหรับจัดการการอนุมัติ/ปฏิเสธ
+   
     const handleUpdateStatus = async (requestId, newStatus) => {
         const actionText = newStatus === 'APPROVED' ? 'อนุมัติ' : 'ปฏิเสธ';
         
@@ -53,7 +53,7 @@ function AdvisorRequestList() {
         }
     };
 
-    // ⭐️ 2. เพิ่มฟังก์ชันสำหรับลบคำร้อง
+   
     const handleDelete = async (requestId) => {
         const isConfirmed = window.confirm(`คุณแน่ใจหรือไม่ที่จะลบคำร้อง ID: ${requestId}? การกระทำนี้ไม่สามารถย้อนกลับได้`);
 
@@ -61,10 +61,10 @@ function AdvisorRequestList() {
             return;
         }
 
-        setIsUpdating(true); // ใช้ state 'isUpdating' ร่วมกันเพื่อ disable ปุ่ม
+        setIsUpdating(true); 
         try {
             await deleteRequest(requestId);
-            // โหลดข้อมูลใหม่
+            
             await loadRequests(); 
             alert(`คำร้อง ID ${requestId} ถูกลบเรียบร้อยแล้ว`);
         } catch (err) {
@@ -76,7 +76,7 @@ function AdvisorRequestList() {
         }
     };
     
-    // ฟังก์ชันนำทางไปหน้า Detail
+   
     const handleRowClick = (requestId) => {
         navigate(`/requests/${requestId}`);
     };
@@ -118,11 +118,11 @@ function AdvisorRequestList() {
                                 {req.status}
                             </td>
 
-                            {/* ⭐️ 3. แก้ไขคอลัมน์ "จัดการ" */}
+                          
                             <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                                 {req.status === 'Pending Approval' ? (
                                     <>
-                                        {/* ปุ่ม อนุมัติ */}
+                                        
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); handleUpdateStatus(req.id, 'APPROVED'); }}
                                             style={{ 
@@ -139,7 +139,7 @@ function AdvisorRequestList() {
                                             {isUpdating ? 'กำลัง...' : 'อนุมัติ'}
                                         </button>
                                         
-                                        {/* ปุ่ม ปฏิเสธ */}
+                                     
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); handleUpdateStatus(req.id, 'REJECTED'); }}
                                             style={{ 
@@ -159,17 +159,17 @@ function AdvisorRequestList() {
                                     <span onClick={() => handleRowClick(req.id)} style={{ cursor: 'pointer', color: 'blue', marginRight: '5px' }}>ดูรายละเอียด</span>
                                 )}
                                 
-                                {/* ปุ่ม "ลบ" (จะแสดงผลทุกสถานะ) */}
+                             
                                 <button
                                     onClick={(e) => { e.stopPropagation(); handleDelete(req.id); }}
                                     style={{ 
                                         padding: '5px 10px', 
-                                        background: '#B22222', // สีแดงที่เข้มกว่า 'ปฏิเสธ'
+                                        background: '#B22222', 
                                         color: 'white', 
                                         border: 'none', 
                                         cursor: 'pointer', 
                                         borderRadius: '3px',
-                                        marginLeft: '5px' // เพิ่มระยะห่าง
+                                        marginLeft: '5px' 
                                     }}
                                     disabled={isUpdating}
                                 >

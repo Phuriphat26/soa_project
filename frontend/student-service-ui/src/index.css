@@ -1,48 +1,48 @@
-/* === Global Styles & Font === */
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
-  background-color: #f0f2f5; /* ⭐️ สีพื้นหลังเทาอ่อนลงอีกนิด */
+  background-color: #f0f2f5; 
   color: #343a40;
   line-height: 1.6;
-  min-height: 100vh; /* ⭐️ ทำให้ body สูงเต็มหน้าจอ */
-  display: flex; /* ⭐️ ใช้ flexbox จัดกึ่งกลางหน้าจอ */
-  flex-direction: column; /* ⭐️ จัดเป็นคอลัมน์เพื่อให้ header/footer อยู่บน-ล่าง */
+  min-height: 100vh; 
+  display: flex; 
+  flex-direction: column; 
 }
 
-/* === Main App Container === */
+
 .container {
   max-width: 1200px;
   margin: 20px auto;
-  padding: 0 20px; /* เพิ่ม padding ซ้ายขวา */
-  flex-grow: 1; /* ⭐️ ให้ container ขยายเต็มพื้นที่ที่เหลือ */
+  padding: 0 20px; 
+  flex-grow: 1; 
 }
 
-/* === Navigation Bar (จาก App.jsx) === */
+
 nav.app-nav {
   background-color: #ffffff;
   padding: 1rem 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* ⭐️ เงาเข้มขึ้นเล็กน้อย */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); 
   border-bottom: 1px solid #e0e0e0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: sticky; /* ⭐️ ทำให้ Navbar ติดอยู่ด้านบน */
+  position: sticky; 
   top: 0;
-  z-index: 1000; /* ทำให้ Navbar อยู่บนสุด */
+  z-index: 1000; 
 }
 
 .app-nav .brand-logo {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0056b3; /* ⭐️ สีฟ้าเข้มสำหรับชื่อระบบ */
+  color: #0056b3; 
   text-decoration: none;
   letter-spacing: -0.5px;
 }
 
 .app-nav .brand-logo span {
-  color: #007bff; /* ⭐️ สีฟ้าสดใสขึ้นสำหรับส่วนที่สอง */
+  color: #007bff; 
 }
 
 nav.app-nav .nav-links {
@@ -65,11 +65,11 @@ nav.app-nav a.active {
   color: #004a99;
 }
 
-/* ⭐️ สไตล์ปุ่มใน Navbar - ปรับให้ใช้ class เหมือนปุ่มอื่นๆ */
+
 nav.app-nav .btn-nav {
   background-color: transparent;
   border: 1px solid #ced4da;
-  color: #007bff; /* ⭐️ เปลี่ยนเป็นสีฟ้าสำหรับ Login/Register */
+  color: #007bff; 
   font-weight: 600;
   padding: 8px 15px;
   border-radius: 5px;
@@ -78,13 +78,13 @@ nav.app-nav .btn-nav {
 }
 
 nav.app-nav .btn-nav:hover {
-  background-color: #e7f3ff; /* ⭐️ สีฟ้าอ่อนเมื่อ hover */
+  background-color: #e7f3ff; 
   border-color: #007bff;
   color: #0056b3;
 }
 
 nav.app-nav .btn-nav.logout-btn {
-  /* สำหรับปุ่ม Logout ใน Navbar */
+
   color: #dc3545;
   border-color: #dc3545;
 }
@@ -95,34 +95,34 @@ nav.app-nav .btn-nav.logout-btn:hover {
   color: #b02a37;
 }
 
-/* === Page Content Wrapper (สำหรับจัดกลางเนื้อหา) === */
+
 .page-content-wrapper {
-  flex-grow: 1; /* ⭐️ ให้ขยายเต็มพื้นที่ที่เหลือ */
+  flex-grow: 1; 
   display: flex;
-  justify-content: center; /* ⭐️ จัดกึ่งกลางแนวนอน */
-  align-items: center; /* ⭐️ จัดกึ่งกลางแนวตั้ง */
-  padding: 20px; /* ให้มี padding รอบๆ เสมอ */
+  justify-content: center; 
+  align-items: center; 
+  padding: 20px; 
 }
 
-/* === Card Component (สำหรับ Dashboard, Login) === */
+
 .card {
   background-color: #ffffff;
-  border: 1px solid #d0e3ff; /* ⭐️ ขอบฟ้าอ่อน */
-  border-radius: 10px; /* ⭐️ ทำให้โค้งมนขึ้น */
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08); /* ⭐️ เงาดูมีมิติขึ้น */
+  border: 1px solid #d0e3ff; 
+  border-radius: 10px; 
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08); 
   margin-bottom: 20px;
   overflow: hidden;
-  width: 100%; /* ⭐️ ให้ Card กว้าง 100% ของ parent */
+  width: 100%; 
 }
 
-/* ⭐️ จำกัดความกว้าง Card เฉพาะในหน้าจัดกึ่งกลาง (Login, Submit) */
+
 .page-content-wrapper .card {
   max-width: 450px;
 }
 
 .card-header {
-  background-color: #e7f3ff; /* ⭐️ สีฟ้าอ่อน */
-  padding: 1.5rem 2rem; /* ⭐️ เพิ่มขนาด padding */
+  background-color: #e7f3ff; 
+  padding: 1.5rem 2rem; 
   border-bottom: 1px solid #d0e3ff;
 }
 
@@ -132,21 +132,21 @@ nav.app-nav .btn-nav.logout-btn:hover {
 .card-header h4 {
   margin: 0;
   color: #004a99;
-  font-weight: 700; /* ⭐️ ทำให้ตัวหนาขึ้น */
+  font-weight: 700; 
 }
 
 .card-body {
-  padding: 2rem; /* ⭐️ เพิ่มขนาด padding */
+  padding: 2rem; 
 }
 
-/* === Form Elements (Login, Register, Submit) === */
+
 .form-group {
-  margin-bottom: 1.5rem; /* ⭐️ เพิ่มระยะห่างระหว่างกลุ่มฟอร์ม */
+  margin-bottom: 1.5rem; 
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.6rem; /* ⭐️ เพิ่มระยะห่าง label กับ input */
+  margin-bottom: 0.6rem; 
   font-weight: 600;
   color: #495057;
   font-size: 0.95rem;
@@ -159,10 +159,10 @@ input[type='email'],
 textarea,
 select {
   width: 100%;
-  padding: 12px 15px; /* ⭐️ เพิ่มขนาด padding input */
-  font-size: 1rem; /* ⭐️ เพิ่มขนาด font input */
+  padding: 12px 15px; 
+  font-size: 1rem; 
   border: 1px solid #ced4da;
-  border-radius: 6px; /* ⭐️ ทำให้โค้งมนขึ้น */
+  border-radius: 6px; 
   box-sizing: border-box;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -174,23 +174,23 @@ input[type='email']:focus,
 textarea:focus,
 select:focus {
   border-color: #007bff;
-  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2); /* ⭐️ เพิ่มขนาดเงา focus */
+  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2); 
   outline: none;
 }
 
-/* === Button Styles === */
+
 .btn {
   display: inline-block;
-  padding: 12px 22px; /* ⭐️ เพิ่มขนาด padding ปุ่ม */
-  font-size: 1rem; /* ⭐️ เพิ่มขนาด font ปุ่ม */
+  padding: 12px 22px; 
+  font-size: 1rem; 
   font-weight: 600;
   border: none;
-  border-radius: 6px; /* ⭐️ ทำให้โค้งมนขึ้น */
+  border-radius: 6px; 
   cursor: pointer;
   text-decoration: none;
   text-align: center;
   transition: all 0.3s ease;
-  white-space: nowrap; /* ป้องกันข้อความปุ่มขึ้นบรรทัดใหม่ */
+  white-space: nowrap; 
 }
 
 .btn:disabled {
@@ -210,11 +210,11 @@ select:focus {
 }
 .btn-primary:hover:not(:disabled) {
   background-color: #0056b3;
-  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2); /* ⭐️ เพิ่มเงาเมื่อ hover */
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2); 
 }
 
 .btn-success {
-  background-color: #28a745; /* ⭐️ สีเขียวสว่างขึ้นเล็กน้อย */
+  background-color: #28a745; 
   color: white;
 }
 .btn-success:hover:not(:disabled) {
@@ -249,13 +249,13 @@ select:focus {
   box-shadow: 0 4px 10px rgba(108, 117, 125, 0.2);
 }
 
-/* === Table Styles (Request Lists, Admin Page) === */
+
 .table-wrapper {
   overflow-x: auto;
   background: #ffffff;
-  border: 1px solid #d0e3ff; /* ⭐️ ขอบฟ้าอ่อน */
-  border-radius: 10px; /* ⭐️ โค้งมนขึ้น */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* ⭐️ เงาตาราง */
+  border: 1px solid #d0e3ff;
+  border-radius: 10px; 
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); 
 }
 
 table {
@@ -266,7 +266,7 @@ table {
 thead th {
   background-color: #0056b3;
   color: white;
-  padding: 15px 20px; /* ⭐️ เพิ่มขนาด padding */
+  padding: 15px 20px; 
   text-align: left;
   font-size: 14px;
   text-transform: uppercase;
@@ -288,24 +288,24 @@ tbody tr:hover {
 
 td,
 th {
-  padding: 15px 20px; /* ⭐️ เพิ่มขนาด padding */
+  padding: 15px 20px; 
   vertical-align: middle;
   font-size: 0.95rem;
 }
 
 td .btn-sm {
-  padding: 6px 10px; /* ⭐️ ปรับขนาดปุ่มเล็ก */
+  padding: 6px 10px; 
   font-size: 13px;
   margin-right: 8px;
 }
 
-/* === Alert Messages === */
+
 .alert {
-  padding: 1rem 1.5rem; /* ⭐️ เพิ่ม padding */
+  padding: 1rem 1.5rem; 
   margin-top: 1rem;
-  margin-bottom: 1.5rem; /* ⭐️ เพิ่ม margin-bottom */
+  margin-bottom: 1.5rem; 
   border: 1px solid transparent;
-  border-radius: 8px; /* ⭐️ โค้งมนขึ้น */
+  border-radius: 8px; 
   font-size: 0.95rem;
   font-weight: 500;
 }
@@ -320,7 +320,7 @@ td .btn-sm {
   border-color: #badbcc;
 }
 
-/* === Utility Classes (ถ้าจำเป็น) === */
+
 .text-center {
   text-align: center;
 }
@@ -331,39 +331,39 @@ td .btn-sm {
   margin-bottom: 1.5rem;
 }
 
-/* ⭐️⭐️⭐️ 1. เพิ่มโค้ดสำหรับ Responsive (จอเล็ก) ⭐️⭐️⭐️ */
+
 @media (max-width: 768px) {
-  /* 2. สั่งให้ Navbar เปลี่ยนเป็นแนวตั้ง (เรียงบนลงล่าง) */
+  
   nav.app-nav {
-    flex-direction: column; /* 👈 เปลี่ยนเป็นแนวตั้ง */
-    align-items: flex-start; /* 👈 ชิดซ้าย */
-    padding: 1rem; /* 👈 ลด Padding จอเล็ก */
+    flex-direction: column; 
+    align-items: flex-start; 
+    padding: 1rem; 
   }
 
-  /* 3. สั่งให้กลุ่มลิงก์ (ขวา) ก็เป็นแนวตั้ง และเต็มจอ */
+
   nav.app-nav .nav-links {
-    flex-direction: column; /* 👈 เปลี่ยนเป็นแนวตั้ง */
+    flex-direction: column; 
     width: 100%;
-    gap: 10px; /* 👈 ลดช่องว่างระหว่างปุ่ม */
-    margin-top: 1rem; /* 👈 เพิ่มช่องว่างระหว่าง โลโก้ กับ ปุ่ม */
+    gap: 10px; 
+    margin-top: 1rem; 
   }
 
-  /* 4. สั่งให้ลิงก์/ปุ่ม ทั้งหมด กว้างเต็ม 100% (เพื่อง่ายต่อการกด) */
+  
   nav.app-nav a,
   nav.app-nav .btn-nav {
     width: 100%;
-    box-sizing: border-box; /* 👈 สำคัญมาก! */
-    text-align: center; /* 👈 จัดข้อความกึ่งกลาง */
+    box-sizing: border-box; 
+    text-align: center; 
   }
 
-  /* 5. ลด Padding ของเนื้อหาหลักในจอเล็ก */
+ 
   .container,
   .page-content-wrapper {
     padding-left: 15px;
     padding-right: 15px;
   }
 
-  /* 6. ปรับขนาด Card ในจอเล็ก */
+
   .card-body {
     padding: 1.5rem;
   }
@@ -371,7 +371,7 @@ td .btn-sm {
     padding: 1rem 1.5rem;
   }
 
-  /* 7. สั่งให้ Card (เช่นหน้า Login) กว้างเต็มจอในหน้า page-content-wrapper */
+  
   .page-content-wrapper .card {
     max-width: 100%;
   }

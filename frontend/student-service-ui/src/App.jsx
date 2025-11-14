@@ -11,7 +11,7 @@ import useAuthStore from './stores/authStore.js';
 import React, { useEffect } from 'react';
 import './index.css';
 
-// Page Imports
+
 import AdminPage from './pages/AdminPage.jsx';
 import RequestDetailPage from './pages/RequestDetailPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
@@ -24,14 +24,14 @@ import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import CategoryManagement from './pages/admin/CategoryManagement.jsx';
 import RequestTypeManagement from './pages/admin/RequestTypeManagement.jsx';
 
-// ⭐️ Import กระดิ่งแจ้งเตือน
+
 import NotificationBell from './components/NotificationBell.jsx';
 
-// Guard Component
+
 import RoleGuard from './components/RoleGuard.jsx';
 
 
-// ⭐️ Layout สำหรับจัดหน้า
+
 function PageLayout() {
   const location = useLocation();
 
@@ -66,7 +66,7 @@ function PageLayout() {
 }
 
 
-// ⭐️ Access Denied Page
+
 const AccessDeniedPage = () => (
   <div className="card" style={{ maxWidth: '500px', textAlign: 'center', margin: 'auto', marginTop: '3rem' }}>
     <div className="card-header">
@@ -82,7 +82,7 @@ const AccessDeniedPage = () => (
 );
 
 
-// ⭐️ 404 Page
+
 const NotFoundPage = () => (
   <div className="card" style={{ maxWidth: '500px', textAlign: 'center', margin: 'auto', marginTop: '3rem' }}>
     <div className="card-header">
@@ -98,7 +98,7 @@ const NotFoundPage = () => (
 );
 
 
-// ⭐️ Loading Page - แสดงขณะโหลด user
+
 const LoadingPage = () => (
   <div style={{
     display: 'flex',
@@ -112,14 +112,15 @@ const LoadingPage = () => (
 );
 
 
-// ⭐️ Root Handler - เปลี่ยนเส้นทางตาม Role
+
 function RootHandler() {
   const user = useAuthStore((state) => state.user);
   const token = useAuthStore.getState().token;
   const [isLoading, setIsLoading] = React.useState(true);
+  const [redirectPath, setRedirectPath] = React.useState(null);
 
   React.useEffect(() => {
-    // ถ้ามี token แต่ยังไม่โหลด user ให้รอ
+  
     if (token && !user) {
       const timer = setTimeout(() => {
         setIsLoading(false);
@@ -129,6 +130,31 @@ function RootHandler() {
     setIsLoading(false);
   }, [token, user]);
 
+  
+  React.useEffect(() => {
+    if (!user) {
+      setRedirectPath(null);
+      return;
+    }
+
+    const role = user.profile?.role || '';
+    console.log('🔍 RootHandler - User role changed:', role);
+
+    let path = '/login';
+    if (role === 'Student') {
+      path = '/dashboard';
+      console.log('✅ Setting redirect to /dashboard');
+    } else if (role === 'Advisor' || role.includes('Staff')) {
+      path = '/advisor/dashboard';
+      console.log('✅ Setting redirect to /advisor/dashboard');
+    } else if (role === 'Admin') {
+      path = '/admin/dashboard';
+      console.log('✅ Setting redirect to /admin/dashboard');
+    }
+
+    setRedirectPath(path);
+  }, [user]);
+
   if (isLoading && token && !user) {
     return <LoadingPage />;
   }
@@ -137,37 +163,15 @@ function RootHandler() {
     return <Navigate to="/login" replace />;
   }
 
-  const role = user.profile?.role || '';
-
-  console.log('🔍 RootHandler - User:', user);
-  console.log('🔍 RootHandler - User role:', role);
-  console.log('🔍 RootHandler - Redirecting to:', 
-    role === 'Student' ? '/dashboard' :
-    (role === 'Advisor' || role.includes('Staff')) ? '/advisor/dashboard' :
-    role === 'Admin' ? '/admin/dashboard' :
-    '/login'
-  );
-
-  // ⭐️ ตรวจสอบ role อย่างละเอียด
-  if (role === 'Student') {
-    return <Navigate to="/dashboard" replace />;
-  } 
-  
-  if (role === 'Advisor' || role.includes('Staff')) {
-    return <Navigate to="/advisor/dashboard" replace />;
-  } 
-  
-  if (role === 'Admin') {
-    return <Navigate to="/admin/dashboard" replace />;
+  if (!redirectPath) {
+    return <LoadingPage />;
   }
 
-  // ถ้า role ไม่ตรงกับใดๆ ให้ logout
-  console.warn('⚠️ Unknown role:', role);
-  return <Navigate to="/login" replace />;
+  return <Navigate to={redirectPath} replace />;
 }
 
 
-// ⭐️ Main App
+
 function App() {
   const user = useAuthStore((state) => state.user);
   const loadUserFromToken = useAuthStore((state) => state.loadUserFromToken);
@@ -199,7 +203,7 @@ function App() {
 
   return (
     <>
-      {/* ⭐️ Navigation Bar */}
+
       <nav className="app-nav">
         <Link to="/" className="brand-logo">
           ระบบคำร้อง<span>ออนไลน์</span>
@@ -268,7 +272,6 @@ function App() {
                 แก้ไขโปรไฟล์
               </Link>
 
-              {/* ⭐️ กระดิ่งแจ้งเตือน */}
               <NotificationBell />
 
               <button onClick={handleLogout} className="btn-nav logout-btn">
@@ -279,7 +282,7 @@ function App() {
         </div>
       </nav>
 
-      {/* ⭐️ Routes */}
+  
       <Routes>
         <Route element={<PageLayout />}>
           <Route path="/" element={<RootHandler />} />
@@ -287,7 +290,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/access-denied" element={<AccessDeniedPage />} />
 
-          {/* Student Routes */}
+    
           <Route
             path="/dashboard"
             element={
@@ -305,7 +308,7 @@ function App() {
             }
           />
 
-          {/* Advisor / Staff */}
+ 
           <Route
             path="/advisor/dashboard"
             element={
@@ -315,7 +318,7 @@ function App() {
             }
           />
 
-          {/* Admin */}
+
           <Route
             path="/admin"
             element={
@@ -349,7 +352,7 @@ function App() {
             }
           />
 
-          {/* Common */}
+
           <Route
             path="/profile/edit"
             element={
@@ -367,7 +370,7 @@ function App() {
             }
           />
 
-          {/* 404 */}
+ 
           <Route path="/404" element={<NotFoundPage />} />
           <Route path="*" element={<Navigate to="/404" replace state={{ is404: true }} />} />
         </Route>

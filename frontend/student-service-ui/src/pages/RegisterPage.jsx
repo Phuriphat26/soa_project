@@ -1,11 +1,11 @@
-// ไฟล์: src/pages/RegisterPage.jsx
+
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { registerUser } from '../api/auth'; 
 
 function RegisterPage() {
-    // ไม่มี field 'role' ใน state แล้ว
+
     const [formData, setFormData] = useState({
         username: '',
         password: '',
@@ -62,7 +62,7 @@ function RegisterPage() {
 
             <form onSubmit={handleSubmit} style={{ background: '#f9f9f9', padding: '20px', borderRadius: '8px' }}>
                 
-                {/* 🔹 Username */}
+            
                 <div style={{ marginBottom: '15px' }}>
                     <label style={{ display: 'block', marginBottom: '5px' }}>ชื่อผู้ใช้ (Username)</label>
                     <input 
@@ -75,7 +75,7 @@ function RegisterPage() {
                     />
                 </div>
 
-                {/* 🔹 Password */}
+           
                 <div style={{ marginBottom: '15px' }}>
                     <label style={{ display: 'block', marginBottom: '5px' }}>รหัสผ่าน (Password)</label>
                     <input 
@@ -88,7 +88,7 @@ function RegisterPage() {
                     />
                 </div>
 
-                {/* 🔹 First Name */}
+             
                 <div style={{ marginBottom: '15px' }}>
                     <label style={{ display: 'block', marginBottom: '5px' }}>ชื่อจริง (First Name)</label>
                     <input 
@@ -101,7 +101,7 @@ function RegisterPage() {
                     />
                 </div>
 
-                {/* 🔹 Last Name */}
+            
                 <div style={{ marginBottom: '20px' }}>
                     <label style={{ display: 'block', marginBottom: '5px' }}>นามสกุล (Last Name)</label>
                     <input 
@@ -114,7 +114,7 @@ function RegisterPage() {
                     />
                 </div>
                 
-                {/* 🔹 Submit Button */}
+        
                 <button 
                     type="submit" 
                     disabled={loading}

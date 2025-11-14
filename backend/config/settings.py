@@ -105,53 +105,51 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# 5. Internationalization
+
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
 
-# 6. Static files
+
 STATIC_URL = 'static/'
 
-# Default primary key field type
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# --- 7. การตั้งค่า REST FRAMEWORK (รวมทุกอย่างไว้ที่นี่) ---
 REST_FRAMEWORK = {
-    # 7.1 ระบบยืนยันตัวตน (Authentication)
+  
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     
-    # 7.2 ระบบสิทธิ์ (Permission)
+  
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated', 
     ),
     
-    # 7.3 ตั้งค่าสำหรับ API Docs (Spectacular)
+   
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     
-    # 7.4 ตั้งค่าสำหรับ Pagination (ถ้ามี)
+   
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10
 }
 
 
-# --- 8. การตั้งค่า SIMPLE JWT (รวมทุกอย่างไว้ที่นี่) ---
 SIMPLE_JWT = {
-    # 8.1 กำหนดอายุ Token
+   
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 
-    # 8.2 ⭐️ [แก้ไขปัญหา Postman] ให้รองรับ Header แบบ 'Bearer' และ 'JWT'
+    
     'AUTH_HEADER_TYPES': ('Bearer', 'JWT'),
 }
 
 
-# --- 9. การตั้งค่าสำหรับ Swagger/Spectacular ---
+
 SPECTACULAR_SETTINGS = {
     'TITLE': 'ระบบคำร้องออนไลน์ (Student Request API)',
     'DESCRIPTION': 'API สำหรับระบบยื่นคำร้องออนไลน์ในองค์กร (โครงงานประจำวิชา)',
@@ -160,7 +158,6 @@ SPECTACULAR_SETTINGS = {
 }
 
 
-# --- 10. การตั้งค่า CORS (ถูกต้องแล้ว) ---
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173", 
     "http://127.0.0.1:5173",
@@ -168,6 +165,6 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 
-# --- 11. การตั้งค่า Media (ถูกต้องแล้ว) ---
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

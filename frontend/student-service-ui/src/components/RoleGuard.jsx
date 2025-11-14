@@ -6,25 +6,33 @@ function RoleGuard({ allowedRoles, children }) {
   const user = useAuthStore((state) => state.user);
   const location = useLocation();
 
-  // 1. ถ้ายังไม่ได้ Login
+
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // 2. ถ้า Login แล้ว แต่มีการกำหนด allowedRoles
+
   if (allowedRoles && allowedRoles.length > 0) {
-    const userRole = user.profile?.role;
+  
+    const userRole = 
+      user.profile?.role ||      
+      user.user_role ||          
+      user.role;                 
+
+    console.log('🔍 RoleGuard - Checking role:');
+    console.log('  user.profile?.role:', user.profile?.role);
+    console.log('  user.user_role:', user.user_role);
+    console.log('  user.role:', user.role);
+    console.log('  Final userRole:', userRole);
+    console.log('  Allowed roles:', allowedRoles);
 
     if (!userRole || !allowedRoles.includes(userRole)) {
       console.log(
-        `Access Denied: User role (${userRole}) not in allowed roles (${allowedRoles.join(
+        `❌ Access Denied: User role (${userRole}) not in allowed roles (${allowedRoles.join(
           ', '
         )})`
       );
 
-      // ⭐️⭐️⭐️ นี่คือส่วนที่แก้ไข ⭐️⭐️⭐️
-      // เปลี่ยนจากการ Navigate กลับไปหน้า Login
-      // เป็นการแสดงผล "หน้าจอแจ้งเตือน" แทน
       return (
         <div
           style={{
@@ -71,11 +79,12 @@ function RoleGuard({ allowedRoles, children }) {
           </p>
         </div>
       );
-      // ⭐️⭐️⭐️ สิ้นสุดส่วนที่แก้ไข ⭐️⭐️⭐️
     }
+
+    console.log(`✅ Access Granted: User role (${userRole}) is allowed`);
   }
 
-  // 3. ผ่านการตรวจสอบทั้งหมด
+
   return <>{children}</>;
 }
 

@@ -41,10 +41,10 @@ function AdminUserList() {
 
         setUpdatingUserId(userId);
         try {
-            // เรียก API เพื่อเปลี่ยน Role
+          
             const updatedUser = await updateRole(userId, newRole);
             
-            // อัปเดตรายการ User ใน State ทันที
+            
             setUsers(users.map(user => 
                 user.id === updatedUser.id ? updatedUser : user
             ));
@@ -79,7 +79,7 @@ function AdminUserList() {
                             <td style={{ border: '1px solid #ddd', padding: '8px' }}>{user.id}</td>
                             <td style={{ border: '1px solid #ddd', padding: '8px' }}>{user.username}</td>
                             <td style={{ border: '1px solid #ddd', padding: '8px' }}>{user.first_name} {user.last_name}</td>
-                            {/* ⭐️ ต้องตรวจสอบว่ามี profile ก่อนเข้าถึง role */}
+                           
                             <td style={{ border: '1px solid #ddd', padding: '8px', fontWeight: 'bold' }}>{user.profile?.role || 'N/A'}</td>
                             <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                                 <button 

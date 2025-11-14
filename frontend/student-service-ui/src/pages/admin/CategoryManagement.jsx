@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// ⭐️ 1. Import useNavigate
+
 import { useNavigate } from 'react-router-dom';
 import {
   fetchCategories,
@@ -16,11 +16,11 @@ function CategoryManagement() {
   const [editingCategoryId, setEditingCategoryId] = useState(null);
   const [editingCategoryName, setEditingCategoryName] = useState('');
   
-  // ⭐️ 2. ประกาศใช้งาน useNavigate
+ 
   const navigate = useNavigate();
 
   const loadCategories = async () => {
-    // ... existing code ...
+ 
     try {
       setLoading(true);
       setError(null);
@@ -41,7 +41,7 @@ function CategoryManagement() {
   }, []);
 
   const handleAddCategory = async (e) => {
-    // ... existing code ...
+
     e.preventDefault();
     if (!newCategoryName.trim()) {
       setError('ชื่อหมวดหมู่ห้ามว่าง');
@@ -51,7 +51,7 @@ function CategoryManagement() {
       setError(null);
       await addCategory(newCategoryName);
       setNewCategoryName('');
-      loadCategories(); // โหลดใหม่
+      loadCategories(); 
     } catch (err) {
       console.error('Error adding category:', err);
       setError(err.name?.[0] || 'ไม่สามารถเพิ่มหมวดหมู่ได้');
@@ -59,11 +59,11 @@ function CategoryManagement() {
   };
 
   const handleDeleteCategory = async (categoryId) => {
-    // ... existing code ...
+
     if (window.confirm('คุณแน่ใจหรือไม่ที่จะลบหมวดหมู่นี้? (ประเภทคำร้องที่อยู่ภายในจะถูกลบไปด้วย)')) {
       try {
         await deleteCategory(categoryId);
-        loadCategories(); // โหลดใหม่
+        loadCategories();
       } catch (err) {
         console.error('Error deleting category:', err);
         setError('ไม่สามารถลบหมวดหมู่ได้');
@@ -71,40 +71,40 @@ function CategoryManagement() {
     }
   };
 
-  // --- Logic การแก้ไข (เหมือนเดิม) ---
+  
   const handleEditClick = (category) => {
-    // ... existing code ...
+   
     setEditingCategoryId(category.id);
     setEditingCategoryName(category.name);
   };
 
   const handleCancelEdit = () => {
-    // ... existing code ...
+   
     setEditingCategoryId(null);
     setEditingCategoryName('');
   };
 
   const handleSaveEdit = async () => {
-    // ... existing code ...
+   
     try {
       await updateCategory(editingCategoryId, editingCategoryName);
       setEditingCategoryId(null);
       setEditingCategoryName('');
-      loadCategories(); // โหลดใหม่
+      loadCategories(); 
     } catch (err) {
       console.error('Error updating category:', err);
       setError(err.name?.[0] || 'ไม่สามารถอัปเดตหมวดหมู่ได้');
     }
   };
 
-  // --- Render (ปรับปรุง) ---
+
   return (
     <div className="card" style={{ maxWidth: '800px' }}>
       <div className="card-header">
         <h2>จัดการหมวดหมู่คำร้อง (Categories)</h2>
       </div>
       <div className="card-body">
-        {/* ... (ส่วน Form "เพิ่มหมวดหมู่ใหม่" เหมือนเดิม) ... */}
+      
         <form onSubmit={handleAddCategory} className="mb-4">
           <div className="form-group">
             <label htmlFor="newCategoryName">เพิ่มหมวดหมู่ใหม่:</label>
@@ -136,7 +136,7 @@ function CategoryManagement() {
                 className="list-group-item d-flex justify-content-between align-items-center"
               >
                 {editingCategoryId === category.id ? (
-                  // ... (ส่วน Input "แก้ไข" เหมือนเดิม) ...
+                 
                   <>
                     <input
                       type="text"
@@ -161,11 +161,11 @@ function CategoryManagement() {
                     </div>
                   </>
                 ) : (
-                  // --- โหมดแสดงผล (ปรับปรุง) ---
+                  
                   <>
                     <span>{category.name}</span>
                     <div style={{ whiteSpace: 'nowrap' }}>
-                      {/* ⭐️ 3. เพิ่มปุ่ม "จัดการประเภท" ⭐️ */}
+                    
                       <button
                         className="btn btn-info btn-sm"
                         onClick={() => navigate(`/admin/categories/${category.id}/types`)}

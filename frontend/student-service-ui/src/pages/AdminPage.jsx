@@ -286,15 +286,15 @@ function AdminPage() {
     loadUsers();
   }, []);
 
-  // ⭐️ แก้ไข handleRoleChange ให้ตรวจสอบค่าก่อนส่ง
+ 
   const handleRoleChange = async (userId, newRole) => {
-    // ⭐️ ป้องกันการส่งค่าว่าง
+  
     if (!newRole || newRole === '') {
       alert('กรุณาเลือก Role ที่ถูกต้อง');
       return;
     }
 
-    // ⭐️ เพิ่ม Debug log แบบละเอียด
+
     console.log('🔍 Changing role:');
     console.log('  userId:', userId, typeof userId);
     console.log('  newRole:', newRole, typeof newRole);
@@ -306,7 +306,7 @@ function AdminPage() {
         `คุณแน่ใจหรือไม่ว่าต้องการเปลี่ยน Role ของผู้ใช้นี้เป็น "${newRole}"?`
       )
     ) {
-      // ⭐️ ถ้ายกเลิก ให้ reload เพื่อรีเซ็ต dropdown
+   
       await loadUsers();
       return;
     }
@@ -320,7 +320,7 @@ function AdminPage() {
       console.error('❌ Error updating role:', err);
       console.log('❌ Error details:', JSON.stringify(err, null, 2));
       alert('เกิดข้อผิดพลาดในการอัปเดต Role: ' + (err.error || err.detail || err.message || 'Unknown error'));
-      // ⭐️ Reload เพื่อรีเซ็ต dropdown
+   
       await loadUsers();
     }
   };
@@ -452,7 +452,7 @@ function AdminPage() {
                     </span>
                   </td>
                   <td>
-                    {/* ⭐️ แก้ไข: ใช้ defaultValue แทน value และเพิ่มการตรวจสอบ */}
+                   
                     <select
                       className="form-select"
                       defaultValue={user.profile?.role || 'STUDENT'}

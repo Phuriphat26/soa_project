@@ -1,6 +1,5 @@
-// src/pages/DashboardPage.jsx
 
-import React, { useState } from 'react'; // ⭐️ 1. Import useState
+import React, { useState } from 'react'; 
 import { useNavigate, Link } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
 import RequestList from '../components/RequestList';
@@ -10,8 +9,8 @@ function DashboardPage() {
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
 
-  // ⭐️ 2. เพิ่ม State สำหรับ Filter
-  const [filterStatus, setFilterStatus] = useState('All'); // (Default คือ 'ทั้งหมด')
+
+  const [filterStatus, setFilterStatus] = useState('All'); 
 
   const handleLogout = () => {
     logout();
@@ -73,7 +72,7 @@ function DashboardPage() {
 
       <h2>รายการคำร้องทั้งหมด</h2>
 
-      {/* ⭐️ 3. เพิ่ม Dropdown สำหรับ Filter (ก่อน RequestList) */}
+
       <div className="form-group" style={{ maxWidth: '250px', marginBottom: '1.5rem' }}>
         <label htmlFor="statusFilter">กรองตามสถานะ:</label>
         <select
@@ -83,7 +82,7 @@ function DashboardPage() {
           onChange={(e) => setFilterStatus(e.target.value)}
         >
           <option value="All">ทั้งหมด</option>
-          {/* ⭐️ แก้ไข value ให้เป็นตัวพิมพ์ใหญ่ (KEY) ตาม models.py */}
+
           <option value="PENDING">รออนุมัติ</option>
           <option value="IN_PROGRESS">กำลังดำเนินการ</option>
           <option value="APPROVED">อนุมัติแล้ว</option>
@@ -91,7 +90,7 @@ function DashboardPage() {
         </select>
       </div>
 
-      {/* ⭐️ 4. ส่ง filterStatus เป็น prop ลงไปให้ RequestList */}
+      
       {user && <RequestList filterStatus={filterStatus} />}
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchAllRequests } from '../api/requests'; // ⭐️ 1. (สำคัญ) Import API ที่ดึงคำร้อง "ทั้งหมด"
+import { fetchAllRequests } from '../api/requests'; 
 
 function StaffDashboard() {
   const [requests, setRequests] = useState([]);
@@ -8,12 +8,12 @@ function StaffDashboard() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // 2. โหลดข้อมูลคำร้อง "ทั้งหมด"
+
   const loadAllRequests = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchAllRequests(); // 👈 API นี้จะดึงของ "ทุกคน"
+      const data = await fetchAllRequests();
       setRequests(data);
     } catch (err) {
       console.error('Error fetching all requests:', err);
@@ -27,9 +27,9 @@ function StaffDashboard() {
     loadAllRequests();
   }, []);
 
-  // 3. (คัดลอกมา) ฟังก์ชันสำหรับแปลง Status เป็นสี
+
   const getStatusStyle = (status) => {
-    // (ใช้ Style object แบบเดียวกับที่เราทำใน RequestList)
+    
     switch (status) {
       case 'Approved':
         return { backgroundColor: '#d4edda', color: '#155724', padding: '3px 8px', borderRadius: '4px' };
@@ -48,7 +48,7 @@ function StaffDashboard() {
   if (error) return <div className="alert alert-danger">{error}</div>;
 
   return (
-    <div className="card"> {/* 4. ใช้ Card หุ้ม */}
+    <div className="card"> 
       <div className="card-header">
         <h3>จัดการคำร้อง (ทั้งหมด)</h3>
       </div>
@@ -59,7 +59,7 @@ function StaffDashboard() {
           <thead className="table-dark">
             <tr>
               <th>ID</th>
-              <th>ผู้ยื่น (Student)</th> {/* ⭐️ 5. Staff ต้องเห็นชื่อคนยื่น */}
+              <th>ผู้ยื่น (Student)</th> 
               <th>ประเภทคำร้อง</th>
               <th>สถานะ</th>
               <th>วันที่ยื่น</th>
@@ -82,7 +82,7 @@ function StaffDashboard() {
                 >
                   <td>#{req.id}</td>
                   <td>
-                    {/* ⭐️ 6. API ของเราส่ง 'user' (SimpleUserSerializer) มาใน List */}
+                 
                     {req.user?.first_name} {req.user?.last_name}
                   </td>
                   <td>{req.request_type?.name || 'N/A'}</td>
@@ -96,7 +96,7 @@ function StaffDashboard() {
                     <button
                       className="btn btn-info btn-sm"
                       onClick={(e) => {
-                        e.stopPropagation(); // (ป้องกันการคลิกทับซ้อน)
+                        e.stopPropagation(); 
                         navigate(`/requests/${req.id}`);
                       }}
                     >

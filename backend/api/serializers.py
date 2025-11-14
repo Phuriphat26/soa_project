@@ -6,8 +6,7 @@ from .models import (
 )
 from django.db import transaction
 from .models import Profile
-# [ 1 ] Serializers สำหรับแสดงข้อมูลพื้นฐาน (ส่วนใหญ่ Read-Only)
-# -----------------------------------------------------------
+
 from .models import Profile
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -41,15 +40,14 @@ class RequestHistorySerializer(serializers.ModelSerializer):
 class AttachmentSerializer(serializers.ModelSerializer):
     file_name = serializers.CharField(source='file.name', read_only=True)
     
-    # ⭐️ [แก้ไข 3/3] เพิ่ม Field 'request'
-    #    (ตั้งค่าเป็น Write-Only เพื่อให้รับค่า ID ตอน 'POST' ได้)
+ 
     request = serializers.PrimaryKeyRelatedField(
         queryset=Request.objects.all(), write_only=True
     )
 
     class Meta:
         model = Attachment
-        fields = ['id', 'file', 'file_name', 'uploaded_at', 'request'] # ✅ เพิ่ม 'request'
+        fields = ['id', 'file', 'file_name', 'uploaded_at', 'request']
 
 
 class NotificationSerializer(serializers.ModelSerializer):
@@ -58,9 +56,6 @@ class NotificationSerializer(serializers.ModelSerializer):
         fields = ['id', 'message', 'is_read', 'created_at']
 
 
-# ⭐️⭐️⭐️ [ 1b ] เพิ่มส่วนนี้ ⭐️⭐️⭐️
-# Serializers ย่อยสำหรับ Nested Data (แก้ปัญหาหน้าขาว)
-# -----------------------------------------------------------
 class SimpleUserSerializer(serializers.ModelSerializer):
     """
     Serializer ย่อย: สำหรับแสดงข้อมูล User (เฉพาะชื่อ)
@@ -76,11 +71,6 @@ class SimpleRequestTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = RequestType
         fields = ['name']
-# ⭐️⭐️⭐️ [ สิ้นสุดส่วนที่เพิ่ม ] ⭐️⭐️⭐️
-
-
-# [ 2 ] Serializers สำหรับ User (Login/Register)
-# -----------------------------------------------------------
 
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(read_only=True) 
@@ -88,7 +78,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile']
 
-# ... (StudentRegisterSerializer และ StaffRegisterSerializer เหมือนเดิม) ...
+
 class StudentRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
     class Meta:
@@ -117,10 +107,7 @@ class StaffRegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-# [ 3 ] Serializer หลัก (Request)
-# -----------------------------------------------------------
 
-# ⭐️⭐️⭐️ [ แก้ไขส่วนนี้ ] ⭐️⭐️⭐️
 class RequestSerializer(serializers.ModelSerializer):
     """
     Serializer หลักสำหรับ 'Request' (สำหรับแสดงรายการ)
@@ -140,14 +127,11 @@ class RequestSerializer(serializers.ModelSerializer):
         model = Request
         fields = [
             'id', 
-            'user', # ⭐️ 4. เปลี่ยน 'student' เป็น 'user' ใน list
+            'user', 
             'request_type', 
             'details', 'status', 'created_at', 'updated_at'
         ]
-# ⭐️⭐️⭐️ [ สิ้นสุดส่วนที่แก้ไข ] ⭐️⭐️⭐️
 
-
-# ⭐️⭐️⭐️ [ เพิ่มส่วนนี้ ] ⭐️⭐️⭐️
 class RequestStatusUpdateSerializer(serializers.ModelSerializer):
     """
     Serializer พิเศษสำหรับ Advisor/Staff ใช้อัปเดต "สถานะ" เท่านั้น
@@ -159,7 +143,7 @@ class RequestStatusUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Request
         fields = ['status']
-# ⭐️⭐️⭐️ [ สิ้นสุดส่วนที่เพิ่ม ] ⭐️⭐️⭐️
+
 
 
 class RequestCreateSerializer(serializers.ModelSerializer):
@@ -170,8 +154,7 @@ class RequestCreateSerializer(serializers.ModelSerializer):
         model = Request
         fields = ['id', 'request_type_id', 'details']
         
-        # ⭐️ 2. บอกว่า 'id' เป็นแบบอ่านอย่างเดียว (Read-Only)
-        #    (เพราะ 'id' ถูกสร้างโดยฐานข้อมูล)
+        
         read_only_fields = ['id']
 
 
@@ -193,7 +176,7 @@ class AdminUserCreateSerializer(serializers.ModelSerializer):
     """
     Serializer สำหรับ Admin ในการสร้าง User ใหม่ (พร้อม Role)
     """
-    # 1. รับ Role มาตรงๆ
+    
     role = serializers.CharField(write_only=True)
     
     class Meta:
@@ -205,14 +188,12 @@ class AdminUserCreateSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        # 2. แยก Role ออกมาจากข้อมูล
-        role_data = validated_data.pop('role', 'Student') # (ถ้าไม่ส่งมา ให้เป็น Student)
+       
+        role_data = validated_data.pop('role', 'Student') 
         
-        # 3. สร้าง User (Django จะ Hash Password ให้อัตโนมัติ)
         user = User.objects.create_user(**validated_data)
         
-        # 4. สร้าง Profile (หรืออัปเดต) ให้ User นี้ทันที
-        # (ใช้ get_or_create เพื่อความปลอดภัย)
+        
         Profile.objects.update_or_create(
             user=user, 
             defaults={'role': role_data}
@@ -232,19 +213,18 @@ class AdminUserUpdateSerializer(serializers.ModelSerializer):
         }
 
     def validate_username(self, value):
-        # ⭐️ ป้องกัน Username ซ้ำ (ขณะแก้ไข)
-        # (ยกเว้นถ้าเป็น Username ของตัวเอง)
+        
         if self.instance and self.instance.username == value:
-            return value # 👈 ไม่ได้เปลี่ยน Username
+            return value 
         
         if User.objects.filter(username=value).exists():
             raise serializers.ValidationError("A user with this username already exists.")
         return value
 
     def validate_email(self, value):
-        # ⭐️ ป้องกัน Email ซ้ำ (ขณะแก้ไข)
+        
         if self.instance and self.instance.email == value:
-            return value # 👈 ไม่ได้เปลี่ยน Email
+            return value 
             
         if value and User.objects.filter(email=value).exists():
             raise serializers.ValidationError("A user with this email already exists.")

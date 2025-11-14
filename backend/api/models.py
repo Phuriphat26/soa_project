@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-# [ 1 ] โปรไฟล์ผู้ใช้และบทบาท (Roles)
+
 class Profile(models.Model):
     class Role(models.TextChoices):
         STUDENT = 'STUDENT', 'Student'
@@ -22,34 +22,33 @@ class Profile(models.Model):
 def create_or_update_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
-    # แก้ไข: บันทึก profile ที่เกี่ยวข้องกับ user
+
     if hasattr(instance, 'profile'):
         instance.profile.save()
     else:
-        # กรณีที่ profile ยังไม่ถูกสร้าง (เช่น user ที่สร้างไว้ก่อน)
+
         Profile.objects.create(user=instance)
 
 
-# [ 2 ] Category (หมวดหมู่/กลุ่มงาน)
+
 class Category(models.Model):
-    name = models.CharField(max_length=100) # เช่น "งานวิชาการ", "งานการเงิน"
+    name = models.CharField(max_length=100) 
     description = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
 
-# [ 3 ] RequestType (ชื่อฟอร์ม/ประเภทย่อย)
-# (นี่คือตัวที่ Error เพราะหาไม่เจอ)
+
 class RequestType(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='request_types')
-    name = models.CharField(max_length=255) # เช่น "ขอถอนรายวิชา (Drop)", "ขอใบ Transcript"
+    name = models.CharField(max_length=255) 
     description = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f'[{self.category.name}] - {self.name}'
 
 
-# [ 4 ] Request (คำร้องหลัก)
+
 class Request(models.Model):
     class Status(models.TextChoices):
         PENDING = 'PENDING', 'Pending Approval'
@@ -59,7 +58,7 @@ class Request(models.Model):
 
     student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='requests')
     
-    # แก้ไขให้เชื่อมกับ RequestType
+
     request_type = models.ForeignKey(RequestType, on_delete=models.SET_NULL, null=True)
     
     details = models.TextField()
@@ -69,12 +68,12 @@ class Request(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        # ตรวจสอบก่อนว่า request_type ไม่ใช่ None
+        
         type_name = self.request_type.name if self.request_type else "N/A"
         return f'Request #{self.id} by {self.student.username} ({type_name})'
 
 
-# [ 5 ] RequestHistory (ประวัติคำร้อง)
+
 class RequestHistory(models.Model):
     request = models.ForeignKey(Request, on_delete=models.CASCADE, related_name='history')
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
@@ -86,7 +85,7 @@ class RequestHistory(models.Model):
         return f'{self.request} - {self.action} at {self.timestamp}'
 
 
-# [ 6 ] Attachment (ไฟล์แนบ)
+
 def get_upload_path(instance, filename):
     return f'attachments/request_{instance.request.id}/{filename}'
 
@@ -99,11 +98,11 @@ class Attachment(models.Model):
         return f'File for Request #{self.request.id}'
 
 
-# [ 7 ] Notification (การแจ้งเตือน)
+
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     
-    # ⭐️ Field นี้จะทำงานได้เลย เพราะ 'Request' ถูกนิยามไว้ "ด้านบน" ของไฟล์นี้แล้ว
+  
     request = models.ForeignKey(
         Request, 
         on_delete=models.CASCADE,

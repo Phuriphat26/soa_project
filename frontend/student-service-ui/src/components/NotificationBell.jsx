@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchNotifications, markNotificationAsRead } from '../api/requests'; // (ปรับ path ถ้าจำเป็น)
 
-// ⭐️ (CSS) เราจะใส่ Style ไว้ที่นี่เพื่อง่ายต่อการใช้งาน
-// คุณสามารถย้ายไปไว้ใน index.css ของคุณได้ถ้าต้องการ
+
 const styles = `
   .notification-bell {
     position: relative;
@@ -77,7 +76,7 @@ function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState(null);
 
-  // 1. ฟังก์ชันโหลดข้อมูล (เราจะเรียกใช้ซ้ำๆ)
+
   const loadNotifications = async () => {
     try {
       const data = await fetchNotifications();
@@ -91,42 +90,41 @@ function NotificationBell() {
     }
   };
 
-  // 2. โหลดข้อมูลครั้งแรก และตั้งเวลาโหลดซ้ำ (Polling)
+  
   useEffect(() => {
-    loadNotifications(); // โหลดครั้งแรก
-    const interval = setInterval(loadNotifications, 30000); // โหลดใหม่ทุก 30 วินาที
-    return () => clearInterval(interval); // (Cleanup เมื่อ component หายไป)
+    loadNotifications(); 
+    const interval = setInterval(loadNotifications, 30000); 
+    return () => clearInterval(interval); 
   }, []);
 
-  // 3. นับจำนวนที่ยังไม่อ่าน
+ 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
-  // 4. เปิด/ปิด Dropdown
+
   const handleToggle = () => {
     setIsOpen(!isOpen);
-    if (!isOpen) { // (ถ้ากำลังจะเปิด)
-      loadNotifications(); // (โหลดใหม่ทันที)
+    if (!isOpen) { 
+      loadNotifications(); 
     }
   };
 
-  // 5. เมื่อคลิกที่รายการแจ้งเตือน
+  
   const handleItemClick = async (notification) => {
-    // (มาร์คว่าอ่านแล้ว เฉพาะอันที่ยังไม่อ่าน)
+    
     if (!notification.is_read) {
       try {
         await markNotificationAsRead(notification.id);
-        loadNotifications(); // โหลดข้อมูลใหม่หลังมาร์ค
+        loadNotifications(); 
       } catch (err) {
         console.error('Failed to mark as read', err);
       }
     }
-    setIsOpen(false); // ปิด Dropdown
-    // (การ Redirect จะทำงานโดย <Link>)
+    setIsOpen(false); 
   };
 
   return (
     <>
-      <style>{styles}</style> {/* (ฝัง Style ไว้ตรงนี้เลย) */}
+      <style>{styles}</style> 
       <div className="notification-bell" onClick={handleToggle}>
         <span style={{ fontSize: '24px' }}>🔔</span>
         {unreadCount > 0 && (
@@ -145,7 +143,7 @@ function NotificationBell() {
             {notifications.map(n => (
               <Link
                 key={n.id}
-                // ⭐️ (สำคัญ) เราจะ Link ไปที่ Request ID
+               
                 to={`/requests/${n.request_id}`} 
                 className={`notification-item ${n.is_read ? '' : 'unread'}`}
                 onClick={() => handleItemClick(n)}
