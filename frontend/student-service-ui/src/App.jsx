@@ -98,9 +98,40 @@ const NotFoundPage = () => (
 );
 
 
+// ⭐️ Loading Page - แสดงขณะโหลด user
+const LoadingPage = () => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    fontSize: '1.2rem'
+  }}>
+    กำลังโหลด...
+  </div>
+);
+
+
 // ⭐️ Root Handler - เปลี่ยนเส้นทางตาม Role
 function RootHandler() {
   const user = useAuthStore((state) => state.user);
+  const token = useAuthStore.getState().token;
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    // ถ้ามี token แต่ยังไม่โหลด user ให้รอ
+    if (token && !user) {
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+    setIsLoading(false);
+  }, [token, user]);
+
+  if (isLoading && token && !user) {
+    return <LoadingPage />;
+  }
 
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -108,14 +139,30 @@ function RootHandler() {
 
   const role = user.profile?.role || '';
 
+  console.log('🔍 RootHandler - User:', user);
+  console.log('🔍 RootHandler - User role:', role);
+  console.log('🔍 RootHandler - Redirecting to:', 
+    role === 'Student' ? '/dashboard' :
+    (role === 'Advisor' || role.includes('Staff')) ? '/advisor/dashboard' :
+    role === 'Admin' ? '/admin/dashboard' :
+    '/login'
+  );
+
+  // ⭐️ ตรวจสอบ role อย่างละเอียด
   if (role === 'Student') {
     return <Navigate to="/dashboard" replace />;
-  } else if (role === 'Advisor' || role.includes('Staff')) {
+  } 
+  
+  if (role === 'Advisor' || role.includes('Staff')) {
     return <Navigate to="/advisor/dashboard" replace />;
-  } else if (role === 'Admin') {
+  } 
+  
+  if (role === 'Admin') {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
+  // ถ้า role ไม่ตรงกับใดๆ ให้ logout
+  console.warn('⚠️ Unknown role:', role);
   return <Navigate to="/login" replace />;
 }
 

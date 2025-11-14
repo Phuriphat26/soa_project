@@ -53,11 +53,12 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     
-    # ⭐️ [แก้ไข Bug 2]
-    # ⭐️ ต้องเป็น Admin เท่านั้นที่สร้าง/แก้ไข/ลบ Category ได้
-    # ⭐️ (ถ้าต้องการให้ Staff อ่านได้อย่างเดียว ให้ใช้วิธีเดียวกับ RequestTypeViewSet)
-    permission_classes = [permissions.IsAdminUser] 
-
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            self.permission_classes = [permissions.IsAuthenticated]
+        else:
+            self.permission_classes = [permissions.IsAdminUser]
+        return [permission() for permission in self.permission_classes]
 class RequestTypeViewSet(viewsets.ModelViewSet):
     queryset = RequestType.objects.all()
     serializer_class = RequestTypeSerializer

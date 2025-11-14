@@ -1,5 +1,3 @@
-// ไฟล์: src/api/auth.js
-
 import axiosClient from './axiosClient'; 
 
 // ⭐️ กำหนดค่าเริ่มต้นของ Role สำหรับการลงทะเบียนอัตโนมัติ
@@ -7,13 +5,29 @@ import axiosClient from './axiosClient';
 const DEFAULT_REGISTER_ROLE = 'student'; 
 
 // *** ฟังก์ชัน Login ***
+// ⭐️ แก้ไข: ดึง user data หลังจาก login
 export const loginUser = async (username, password) => {
   try {
-    const response = await axiosClient.post(`/token/`, { 
+    // 1. Login ได้ token
+    const tokenResponse = await axiosClient.post(`/token/`, { 
       username: username,
       password: password,
     });
-    return response.data; 
+
+    const tokens = tokenResponse.data; // { access, refresh }
+
+    // 2. ตั้ง token ให้ axiosClient เพื่อใช้ในการ request ต่อไป
+    axiosClient.defaults.headers.common['Authorization'] = `Bearer ${tokens.access}`;
+
+    // 3. ดึง user data เพิ่มเติม
+    const userResponse = await axiosClient.get(`/users/me/`);
+
+    // 4. Return ทั้ง token และ user data
+    return {
+      access: tokens.access,
+      refresh: tokens.refresh,
+      user: userResponse.data,
+    };
 
   } catch (error) {
     throw error.response?.data || error; 

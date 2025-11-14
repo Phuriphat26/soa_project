@@ -71,12 +71,14 @@ function RequestList({ filterStatus }) {
   };
 
   // ⭐️ 5. สร้าง Array ใหม่ที่กรองแล้ว (จาก prop ที่ได้รับมา)
-  const filteredRequests = (requests || []).filter(req => {
-    if (!filterStatus || filterStatus === 'All') {
-      return true; // ถ้าไม่มีตัวกรอง หรือ เลือก 'All' ให้แสดงทั้งหมด
-    }
-    return req.status === filterStatus; // กรองตามสถานะที่เลือก
-  });
+   const filteredRequests = Array.isArray(requests) 
+    ? requests.filter(req => {
+        if (!filterStatus || filterStatus === 'All') {
+          return true; // ถ้าไม่มีตัวกรอง หรือ เลือก 'All' ให้แสดงทั้งหมด
+        }
+        return req.status === filterStatus; // กรองตามสถานะที่เลือก
+      })
+    : [];
 
 
   if (loading) return <p>กำลังโหลดรายการคำร้อง...</p>;

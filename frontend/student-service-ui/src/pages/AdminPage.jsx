@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-// ⭐️ 1. Import ฟังก์ชัน 'deleteUser' และ 'updateUser'
 import {
   fetchAllUsers,
   updateRole,
@@ -8,13 +7,12 @@ import {
   updateUser,
 } from '../api/requests';
 
-// ⭐️ 2. (Modal สร้าง User - โค้ดเดิมจากไฟล์ล่าสุด)
 function CreateUserModal({ show, onClose, onSubmit }) {
   const [newUserData, setNewUserData] = useState({
     username: '',
     email: '',
     password: '',
-    role: 'Student', // ค่าเริ่มต้น
+    role: 'Student',
   });
   const [error, setError] = useState(null);
 
@@ -36,7 +34,7 @@ function CreateUserModal({ show, onClose, onSubmit }) {
     }
     try {
       await onSubmit(newUserData);
-      onClose(); // ปิด Modal เมื่อสำเร็จ
+      onClose();
     } catch (err) {
       if (err.username) {
         setError('Username นี้ถูกใช้แล้ว: ' + err.username.join(', '));
@@ -50,7 +48,6 @@ function CreateUserModal({ show, onClose, onSubmit }) {
     }
   };
 
-  // ( ... JSX for CreateUserModal ... )
   return (
     <div
       style={{
@@ -117,7 +114,8 @@ function CreateUserModal({ show, onClose, onSubmit }) {
             >
               <option value="Student">Student</option>
               <option value="Advisor">Advisor</option>
-              <option value="Staff">Staff</option>
+              <option value="Staff (Registrar)">Staff (Registrar)</option>
+              <option value="Staff (Finance)">Staff (Finance)</option>
               <option value="Admin">Admin</option>
             </select>
           </div>
@@ -141,7 +139,6 @@ function CreateUserModal({ show, onClose, onSubmit }) {
   );
 }
 
-// --- ⭐️ 3. สร้าง Component ใหม่สำหรับ "Edit Modal" ⭐️ ---
 function EditUserModal({ user, show, onClose, onSubmit }) {
   const [editData, setEditData] = useState({
     username: '',
@@ -149,14 +146,13 @@ function EditUserModal({ user, show, onClose, onSubmit }) {
   });
   const [error, setError] = useState(null);
 
-  // ⭐️ เมื่อ Modal เปิด หรือ User เปลี่ยน, ให้อัปเดต State
   useEffect(() => {
     if (user) {
       setEditData({
         username: user.username,
         email: user.email || '',
       });
-      setError(null); // เคลียร์ Error เก่า
+      setError(null);
     }
   }, [user, show]);
 
@@ -177,9 +173,8 @@ function EditUserModal({ user, show, onClose, onSubmit }) {
       return;
     }
     try {
-      // ⭐️ ส่งเฉพาะข้อมูลที่แก้ไข (username, email) กลับไป
       await onSubmit(user.id, editData);
-      onClose(); // ปิด Modal เมื่อสำเร็จ
+      onClose();
     } catch (err) {
       if (err.username) {
         setError('Username นี้ถูกใช้แล้ว: ' + err.username.join(', '));
@@ -263,18 +258,15 @@ function EditUserModal({ user, show, onClose, onSubmit }) {
   );
 }
 
-// --- ⭐️ 4. อัปเดตหน้า AdminPage หลัก ⭐️ ---
 function AdminPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // State สำหรับ Modal
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false); // ⭐️ State ใหม่
-  const [editingUser, setEditingUser] = useState(null); // ⭐️ State ใหม่
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
 
-  // (loadUsers เหมือนเดิม)
   const loadUsers = async () => {
     try {
       setLoading(true);
@@ -294,26 +286,45 @@ function AdminPage() {
     loadUsers();
   }, []);
 
-  // (handleRoleChange เหมือนเดิม)
+  // ⭐️ แก้ไข handleRoleChange ให้ตรวจสอบค่าก่อนส่ง
   const handleRoleChange = async (userId, newRole) => {
+    // ⭐️ ป้องกันการส่งค่าว่าง
+    if (!newRole || newRole === '') {
+      alert('กรุณาเลือก Role ที่ถูกต้อง');
+      return;
+    }
+
+    // ⭐️ เพิ่ม Debug log แบบละเอียด
+    console.log('🔍 Changing role:');
+    console.log('  userId:', userId, typeof userId);
+    console.log('  newRole:', newRole, typeof newRole);
+    console.log('  newRole length:', newRole.length);
+    console.log('  newRole charCodes:', [...newRole].map(c => c.charCodeAt(0)));
+
     if (
       !window.confirm(
-        `คุณแน่ใจหรือไม่ว่าต้องการเปลี่ยน Role ของผู้ใช้นี้เป็น ${newRole}?`
+        `คุณแน่ใจหรือไม่ว่าต้องการเปลี่ยน Role ของผู้ใช้นี้เป็น "${newRole}"?`
       )
     ) {
+      // ⭐️ ถ้ายกเลิก ให้ reload เพื่อรีเซ็ต dropdown
+      await loadUsers();
       return;
     }
     try {
-      await updateRole(userId, newRole);
+      console.log('📤 Sending API request...');
+      const response = await updateRole(userId, newRole);
+      console.log('✅ Success response:', response);
       alert('อัปเดต Role สำเร็จ!');
       await loadUsers();
     } catch (err) {
-      console.error('Error updating role:', err);
-      alert('เกิดข้อผิดพลาดในการอัปเดต Role: ' + (err.detail || err.message));
+      console.error('❌ Error updating role:', err);
+      console.log('❌ Error details:', JSON.stringify(err, null, 2));
+      alert('เกิดข้อผิดพลาดในการอัปเดต Role: ' + (err.error || err.detail || err.message || 'Unknown error'));
+      // ⭐️ Reload เพื่อรีเซ็ต dropdown
+      await loadUsers();
     }
   };
 
-  // (handleCreateUserSubmit เหมือนเดิม)
   const handleCreateUserSubmit = async (newUserData) => {
     try {
       await createNewUser(newUserData);
@@ -326,9 +337,6 @@ function AdminPage() {
     }
   };
 
-  // --- ⭐️ 5. เพิ่ม Handlers สำหรับ "แก้ไข" และ "ลบ" ⭐️ ---
-
-  // เมื่อกดปุ่ม "ลบ"
   const handleDeleteUser = async (user) => {
     if (
       !window.confirm(
@@ -347,16 +355,13 @@ function AdminPage() {
     }
   };
 
-  // เมื่อกดปุ่ม "แก้ไข" (เปิด Modal)
   const handleEditClick = (user) => {
     setEditingUser(user);
     setShowEditModal(true);
   };
 
-  // เมื่อ "Submit" จาก Modal แก้ไข
   const handleEditUserSubmit = async (userId, updatedData) => {
     try {
-      // ⭐️ เราส่งแค่ username และ email (ตามที่ API View ใหม่ต้องการ)
       await updateUser(userId, updatedData);
       alert('แก้ไขข้อมูลผู้ใช้สำเร็จ!');
       await loadUsers();
@@ -364,13 +369,12 @@ function AdminPage() {
       setEditingUser(null);
     } catch (error) {
       console.error('Failed to update user:', error);
-      throw error; // โยน Error กลับไปให้ Modal (EditUserModal)
+      throw error;
     }
   };
 
   return (
     <div className="container" style={{ padding: '20px' }}>
-      {/* ⭐️ 6. เพิ่ม Modal ทั้งสองตัว ⭐️ */}
       <CreateUserModal
         show={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -417,7 +421,6 @@ function AdminPage() {
               <th>Email</th>
               <th>Role ปัจจุบัน</th>
               <th>เปลี่ยน Role เป็น</th>
-              {/* ⭐️ 7. เพิ่มคอลัมน์ใหม่ ⭐️ */}
               <th style={{width: '180px'}}>การกระทำ (Actions)</th> 
             </tr>
           </thead>
@@ -449,21 +452,20 @@ function AdminPage() {
                     </span>
                   </td>
                   <td>
+                    {/* ⭐️ แก้ไข: ใช้ defaultValue แทน value และเพิ่มการตรวจสอบ */}
                     <select
                       className="form-select"
-                      value={user.profile?.role || ''}
-                      onChange={(e) =>
-                        handleRoleChange(user.id, e.target.value)
-                      }
-                      style={{ maxWidth: '200px' }}
+                      defaultValue={user.profile?.role || 'STUDENT'}
+                      onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                      style={{ maxWidth: '220px' }}
                     >
-                      <option value="Student">Student</option>
-                      <option value="Advisor">Advisor</option>
-                      <option value="Staff">Staff</option>
-                      <option value="Admin">Admin</option>
+                      <option value="STUDENT">Student</option>
+                      <option value="ADVISOR">Advisor</option>
+                      <option value="STAFF_REGISTRAR">Staff (Registrar)</option>
+                      <option value="STAFF_FINANCE">Staff (Finance)</option>
+                      <option value="ADMIN">Admin</option>
                     </select>
                   </td>
-                  {/* ⭐️ 8. เพิ่มปุ่ม "แก้ไข" และ "ลบ" ⭐️ */}
                   <td>
                     <button
                       className="btn btn-warning btn-sm"

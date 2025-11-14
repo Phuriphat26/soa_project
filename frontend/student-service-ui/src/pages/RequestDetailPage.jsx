@@ -368,7 +368,7 @@ function RequestDetailPage() {
         )}
 
         {/* จัดการคำร้อง (Advisor/Staff) */}
-        {canUpdateStatus && request.status === 'Pending Approval' && (
+        {canUpdateStatus &&  (
           <div className="card mb-4">
             <div className="card-header" style={{backgroundColor: '#fff3e0'}}>
               <h3>⚙️ การจัดการคำร้อง (สำหรับ {userRole})</h3>

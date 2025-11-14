@@ -1,5 +1,3 @@
-// ไฟล์: src/pages/LoginPage.jsx
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
@@ -30,41 +28,48 @@ function LoginPage() {
     setLoading(true);
 
     try {
-      const userData = await loginUser(username, password);
-      await setUser(userData);
+      // ⭐️ loginUser ตอนนี้ return { access, refresh, user }
+      const response = await loginUser(username, password);
+      
+      console.log('✅ Login success:', response);
+      
+      // ⭐️ Set token ก่อน
+      // ✅ เหลือแค่นี้
+      await setUser(response);
+      
+      // ⭐️ Set user data
+      if (response.user) {
+        await setUser(response.user);
+      }
+      
       const from = location.state?.from?.pathname || '/';
       navigate(from, { replace: true });
     } catch (err) {
       const errorMessage = err.detail || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
       setError(errorMessage);
+      console.error('❌ Login error:', err);
     } finally {
       setLoading(false);
     }
   };
 
   if (user) {
-    // ⭐️ ใช้ .container เพื่อให้มี padding สวยงาม
     return <div className="container">กำลังพากลับไปหน้าเดิม...</div>;
   }
 
   return (
-    // ⭐️ 1. เปลี่ยน div รอบนอกสุดให้เป็น "card" และจัดกลางหน้าจอ
     <div
       className="card"
       style={{ maxWidth: '450px', margin: '40px auto' }}
     >
-      {/* ⭐️ 2. เพิ่ม .card-header สีฟ้าอ่อนสำหรับหัวข้อ */}
       <div className="card-header">
         <h2>เข้าสู่ระบบ</h2>
       </div>
 
-      {/* ⭐️ 3. เนื้อหาฟอร์มอยู่ใน .card-body */}
       <div className="card-body">
-        {/* ⭐️ 4. เปลี่ยน p สีแดง เป็น .alert .alert-danger */}
         {error && <div className="alert alert-danger">{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          {/* ⭐️ 5. ใช้ .form-group สำหรับจัดกลุ่ม label และ input */}
           <div className="form-group">
             <label htmlFor="username">ชื่อผู้ใช้ (Username)</label>
             <input
@@ -73,7 +78,7 @@ function LoginPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="form-control" // ⭐️ 6. ใช้ .form-control
+              className="form-control"
             />
           </div>
 
@@ -85,11 +90,10 @@ function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="form-control" // ⭐️ 6. ใช้ .form-control
+              className="form-control"
             />
           </div>
 
-          {/* ⭐️ 7. เปลี่ยน button เป็น .btn .btn-primary .btn-block */}
           <button
             type="submit"
             disabled={loading}
